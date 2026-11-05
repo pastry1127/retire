@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>은퇴 자산 인출 시뮬레이터 & 크레바스 방어 플랜</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --primary: #3b82f6;
+      --primary-hover: #60a5fa;
+      --accent-red: #ef4444;
+      --accent-green: #10b981;
+      --accent-orange: #f97316;
+      --accent-purple: #ec4899;
+      --accent-teal: #14b8a6;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    }
+
+    [data-theme="light"] {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding: 24px 16px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      user-select: none;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .kpi-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .kpi-card .label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .kpi-card .value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .section-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .scenario-minimal-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      background: var(--bg-color);
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .scenario-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .scenario-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .sc-chip {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .sc-chip:hover, .sc-chip.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .input-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-group label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .input-group input, .input-group select {
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--bg-color);
+      color: var(--text-main);
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .chart-legend-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 16px;
+      font-size: 0.85rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .legend-box {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+    }
+
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 380px;
+      background: #090d16;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      overflow: visible;
+      padding: 10px;
+      touch-action: none;
+    }
+
+    svg.chart-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .tooltip {
+      position: absolute;
+      padding: 12px 16px;
+      background: rgba(15, 23, 42, 0.98);
+      border: 1px solid var(--primary);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s ease-out, left 0.05s linear, top 0.05s linear;
+      z-index: 999;
+      color: #f8fafc;
+      line-height: 1.5;
+      min-width: 190px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.2s;
+      font-size: 0.9rem;
+    }
+
+    .btn:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-accent {
+      background: var(--accent-green);
+    }
+    .btn-accent:hover {
+      background: #059669;
+    }
+
+    #copySummaryBox {
+      width: 100%;
+      height: 130px;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-color);
+      color: var(--text-main);
+      font-family: monospace;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- 헤더 & 모드 토글 -->
+  <div class="header">
+    <h1>은퇴 자산 인출 시뮬레이터</h1>
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <span id="themeLabel">☀️ 라이트모드</span>
+    </div>
+  </div>
+
+  <!-- 상단 핵심 요약 (KPI) -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="label">은퇴 총자산</div>
+      <div class="value" id="kpiTotalAsset">0억 0,000만 원</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">월 희망 인출액</div>
+      <div class="value" id="kpiMonthlyDraw">0 만 원</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">초기 연간 인출률</div>
+      <div class="value" id="kpiDrawRate">0 %</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">자산 고갈 예상 연령</div>
+      <div class="value" id="kpiDepletionAge" style="color: var(--accent-green);">100세+ 잔여</div>
+    </div>
+  </div>
+
+  <!-- 인출률 중심 시나리오 바 -->
+  <div class="section-card" style="padding: 14px 20px;">
+    <div class="scenario-minimal-bar">
+      <span class="scenario-label">⚡ 인출률 시나리오:</span>
+      <div class="scenario-chips">
+        <button class="sc-chip" id="sc1" onclick="applyScenario(3.3)">🛡️ 보수적 3.3% 룰</button>
+        <button class="sc-chip active" id="sc2" onclick="applyScenario(4.0)">⚖️ 표준 4.0% 룰</button>
+        <button class="sc-chip" id="sc3" onclick="applyScenario(5.0)">🔥 적극적 5.0% 룰</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 자산 입력 섹션 -->
+  <div class="section-card">
+    <div class="section-title">💼 1. 보유 계좌별 자산 입력 (단위: 만 원)</div>
+    <div class="input-grid">
+      <div class="input-group">
+        <label for="accGeneral">일반계좌 / 주식 / CMA</label>
+        <input type="text" id="accGeneral" value="1,800" oninput="formatAndRecalc(this)">
+      </div>
+      <div class="input-group">
+        <label for="accIsa">중개형 ISA</label>
+        <input type="text" id="accIsa" value="14,000" oninput="formatAndRecalc(this)">
+      </div>
+      <div class="input-group">
+        <label for="accPension">연금저축 (펀드/신탁)</label>
+        <input type="text" id="accPension" value="16,000" oninput="formatAndRecalc(this)">
+      </div>
+      <div class="input-group">
+        <label for="accIrp">IRP (개인형 퇴직연금)</label>
+        <input type="text" id="accIrp" value="3,000" oninput="formatAndRecalc(this)">
+      </div>
+      <div class="input-group">
+        <label for="accAnnuity">연금보험 (비과세/종신)</label>
+        <input type="text" id="accAnnuity" value="10,000" oninput="formatAndRecalc(this)">
+      </div>
+      <div class="input-group">
+        <label for="accOverseas">해외계좌 (직투/종합)</label>
+        <input type="text" id="accOverseas" value="6,500" oninput="formatAndRecalc(this)">
+      </div>
+    </div>
+  </div>
+
+  <!-- 조건 설정 섹션 -->
+  <div class="section-card">
+    <div class="section-title">⚙️ 2. 국민연금 및 인출/수익률 설정</div>
+    <div class="input-grid">
+      <div class="input-group">
+        <label for="pensionStartAge">국민연금 수령 개시 연령 (65세=2040년)</label>
+        <select id="pensionStartAge" onchange="recalculateAll()">
+          <option value="60">60세 (조기수령)</option>
+          <option value="65" selected>65세 (2040년 정상 개시)</option>
+          <option value="70">70세 (연기수령)</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label for="pensionMonthly">국민연금 예상 월 수령액 (만 원)</label>
+        <input type="text" id="pensionMonthly" value="110" oninput="formatAndRecalc(this)">
+      </div>
+      <div class="input-group">
+        <label for="retireAge">은퇴 시점 연령 (세)</label>
+        <input type="number" id="retireAge" value="59" min="50" max="70" onchange="recalculateAll()">
+      </div>
+      <div class="input-group">
+        <label for="targetWithdrawal">목표 월 총생활비 (만 원)</label>
+        <input type="text" id="targetWithdrawal" value="300" oninput="onManualWithdrawalChange()">
+      </div>
+      <div class="input-group">
+        <label for="customDrawRate">초기 연간 인출률 직접 설정 (%)</label>
+        <input type="number" id="customDrawRate" value="4.0" step="0.1" min="1.0" max="15.0" oninput="onCustomRateChange()">
+      </div>
+      <div class="input-group">
+        <label for="inflationRate">연 물가상승률 (%)</label>
+        <input type="number" id="inflationRate" value="3.0" step="0.1" onchange="recalculateAll()">
+      </div>
+      <div class="input-group">
+        <label for="returnRate">은퇴 후 연 투자 수익률 (%)</label>
+        <input type="number" id="returnRate" value="6.0" step="0.1" onchange="recalculateAll()">
+      </div>
+    </div>
+  </div>
+
+  <!-- 1번 차트: 나이별 궤적 & 크레바스 흐름 차트 -->
+  <div class="section-card">
+    <div class="chart-header">
+      <div class="section-title" style="margin-bottom:0;">
+        📈 나이별 총 자산 잔액 & 현금흐름 궤적 차트 (65세=2040년)
+      </div>
+      <div style="font-size: 0.8rem; color: var(--text-muted);">
+        손을 떼면 세부 상태가 고정되고, 차트를 벗어나면 사라집니다.
+      </div>
+    </div>
+
+    <div class="chart-legend-grid">
+      <div class="legend-item">
+        <div class="legend-dot" style="background: var(--primary);"></div>
+        <span>총 잔여 자산 궤적</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background: var(--accent-orange);"></div>
+        <span>사적 자산 연간 순 인출액</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background: var(--accent-green);"></div>
+        <span>국민연금 연간 수령액</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-box" style="background: rgba(236, 72, 153, 0.15); border: 1px dashed var(--accent-purple);"></div>
+        <span>은퇴 크레바스 (소득 공백기)</span>
+      </div>
+    </div>
+
+    <div class="chart-container" id="chartContainer">
+      <div class="tooltip" id="chartTooltip"></div>
+      <svg class="chart-svg" id="chartSvg"></svg>
+    </div>
+  </div>
+
+  <!-- 2번 스택 바 차트 -->
+  <div class="section-card">
+    <div class="chart-header">
+      <div class="section-title" style="margin-bottom:0;">
+        📊 나이별 계좌별 자산 구성 (Stacked Bar) 차트
+      </div>
+      <div style="font-size: 0.8rem; color: var(--text-muted);">
+        손을 떼면 세부 상태가 고정되고, 차트를 벗어나면 사라집니다.
+      </div>
+    </div>
+
+    <div class="chart-legend-grid">
+      <div class="legend-item"><div class="legend-dot" style="background: var(--primary);"></div><span>일반계좌/CMA</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background: var(--accent-orange);"></div><span>중개형 ISA</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background: var(--accent-green);"></div><span>연금저축</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background: var(--accent-purple);"></div><span>IRP</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background: var(--accent-teal);"></div><span>연금보험</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background: #eab308;"></div><span>해외계좌</span></div>
+    </div>
+
+    <div class="chart-container" id="barChartContainer">
+      <div class="tooltip" id="barChartTooltip"></div>
+      <svg class="chart-svg" id="barChartSvg"></svg>
+    </div>
+  </div>
+
+  <!-- 결과 요약 보고서 및 표 복사 섹션 -->
+  <div class="section-card">
+    <div class="chart-header">
+      <div class="section-title" style="margin-bottom:0;">
+        📄 시뮬레이션 결과 요약 및 구글 문서/스프레드시트용 표 복사
+      </div>
+      <div class="btn-group">
+        <button class="btn" onclick="copyResultSummary()">요약 복사하기</button>
+        <button class="btn btn-accent" onclick="copyTableForGoogleDocs()">📋 35년치 상세 표 복사 (구글 문서/엑셀용)</button>
+      </div>
+    </div>
+    <textarea id="copySummaryBox" readonly></textarea>
+  </div>
+</div>
+
+<script>
+  let latestDataPoints = [];
+
+  function parseCommaInt(valStr) {
+    if (!valStr) return 0;
+    return parseInt(valStr.toString().replace(/,/g, ''), 10) || 0;
+  }
+
+  function formatComma(num) {
+    return num.toLocaleString('ko-KR');
+  }
+
+  function formatAssetDisplay(amountInTenThousand) {
+    const raw = parseCommaInt(amountInTenThousand);
+    const totalMan = raw * 10000;
+    const eok = Math.floor(totalMan / 100000000);
+    const remainderMan = Math.floor((totalMan % 100000000) / 10000);
+
+    if (eok > 0) {
+      if (remainderMan > 0) {
+        return `${eok}억 ${formatComma(remainderMan)}만 원`;
+      }
+      return `${eok}억 원`;
+    }
+    return `${formatComma(raw)}만 원`;
+  }
+
+  function formatAndRecalc(inputEl) {
+    let num = parseCommaInt(inputEl.value);
+    inputEl.value = formatComma(num);
+    recalculateAll();
+  }
+
+  function onManualWithdrawalChange() {
+    document.querySelectorAll('.sc-chip').forEach(b => b.classList.remove('active'));
+    
+    const accGeneral = parseCommaInt(document.getElementById('accGeneral').value);
+    const accIsa = parseCommaInt(document.getElementById('accIsa').value);
+    const accPension = parseCommaInt(document.getElementById('accPension').value);
+    const accIrp = parseCommaInt(document.getElementById('accIrp').value);
+    const accAnnuity = parseCommaInt(document.getElementById('accAnnuity').value);
+    const accOverseas = parseCommaInt(document.getElementById('accOverseas').value);
+    const totalAssetMan = accGeneral + accIsa + accPension + accIrp + accAnnuity + accOverseas;
+
+    const targetMonthlyDraw = parseCommaInt(document.getElementById('targetWithdrawal').value);
+    if (totalAssetMan > 0) {
+      const calculatedRate = ((targetMonthlyDraw * 12 * 10000) / (totalAssetMan * 10000)) * 100;
+      document.getElementById('customDrawRate').value = calculatedRate.toFixed(1);
+    }
+    recalculateAll();
+  }
+
+  function onCustomRateChange() {
+    document.querySelectorAll('.sc-chip').forEach(b => b.classList.remove('active'));
+
+    const accGeneral = parseCommaInt(document.getElementById('accGeneral').value);
+    const accIsa = parseCommaInt(document.getElementById('accIsa').value);
+    const accPension = parseCommaInt(document.getElementById('accPension').value);
+    const accIrp = parseCommaInt(document.getElementById('accIrp').value);
+    const accAnnuity = parseCommaInt(document.getElementById('accAnnuity').value);
+    const accOverseas = parseCommaInt(document.getElementById('accOverseas').value);
+    const totalAssetMan = accGeneral + accIsa + accPension + accIrp + accAnnuity + accOverseas;
+
+    const rate = (parseFloat(document.getElementById('customDrawRate').value) || 4.0) / 100;
+    const annualDraw = (totalAssetMan * 10000) * rate;
+    const monthlyDraw = Math.round(annualDraw / 12 / 10000);
+
+    document.getElementById('targetWithdrawal').value = formatComma(monthlyDraw);
+    recalculateAll();
+  }
+
+  function toggleTheme() {
+    const body = document.body;
+    const label = document.getElementById('themeLabel');
+    if (body.getAttribute('data-theme') === 'light') {
+      body.removeAttribute('data-theme');
+      label.textContent = '☀️ 라이트모드';
+    } else {
+      body.setAttribute('data-theme', 'light');
+      label.textContent = '🌙 다크모드';
+    }
+  }
+
+  function applyScenario(rateVal) {
+    document.querySelectorAll('.sc-chip').forEach(b => b.classList.remove('active'));
+    if (rateVal === 3.3) document.getElementById('sc1').classList.add('active');
+    if (rateVal === 4.0) document.getElementById('sc2').classList.add('active');
+    if (rateVal === 5.0) document.getElementById('sc3').classList.add('active');
+
+    document.getElementById('customDrawRate').value = rateVal.toFixed(1);
+    onCustomRateChange();
+  }
+
+  function recalculateAll() {
+    const accGeneral = parseCommaInt(document.getElementById('accGeneral').value);
+    const accIsa = parseCommaInt(document.getElementById('accIsa').value);
+    const accPension = parseCommaInt(document.getElementById('accPension').value);
+    const accIrp = parseCommaInt(document.getElementById('accIrp').value);
+    const accAnnuity = parseCommaInt(document.getElementById('accAnnuity').value);
+    const accOverseas = parseCommaInt(document.getElementById('accOverseas').value);
+
+    const totalAsset = accGeneral + accIsa + accPension + accIrp + accAnnuity + accOverseas;
+
+    const retireAge = parseInt(document.getElementById('retireAge').value, 10) || 59;
+    const targetMonthlyDraw = parseCommaInt(document.getElementById('targetWithdrawal').value);
+    const pensionStartAge = parseInt(document.getElementById('pensionStartAge').value, 10) || 65;
+    const pensionMonthly = parseCommaInt(document.getElementById('pensionMonthly').value);
+    const inflationRate = (parseFloat(document.getElementById('inflationRate').value) || 3.0) / 100;
+    const returnRate = (parseFloat(document.getElementById('returnRate').value) || 6.0) / 100;
+
+    document.getElementById('kpiTotalAsset').textContent = formatAssetDisplay(totalAsset);
+    document.getElementById('kpiMonthlyDraw').textContent = formatComma(targetMonthlyDraw) + ' 만 원';
+
+    const annualDrawInitial = targetMonthlyDraw * 12;
+    const initialDrawRate = totalAsset > 0 ? ((annualDrawInitial / totalAsset) * 100).toFixed(1) : 0;
+    document.getElementById('kpiDrawRate').textContent = initialDrawRate + ' %';
+
+    let currentBalance = totalAsset * 10000;
+    let depletionAge = null;
+    const dataPoints = [];
+
+    let subGen = accGeneral * 10000;
+    let subIsa = accIsa * 10000;
+    let subPen = accPension * 10000;
+    let subIrp = accIrp * 10000;
+    let subAnn = accAnnuity * 10000;
+    let subOvs = accOverseas * 10000;
+
+    const baseYear = 2040 - 65; // 65세가 정확히 2040년이 되도록 연동
+
+    for (let i = 0; i <= (95 - retireAge); i++) {
+      const age = retireAge + i;
+      const year = baseYear + age;
+      const totalSub = subGen + subIsa + subPen + subIrp + subAnn + subOvs;
+
+      const currentAnnualNeed = annualDrawInitial * 10000 * Math.pow(1 + inflationRate, i);
+      const annualPension = (age >= pensionStartAge) ? (pensionMonthly * 10000 * 12 * Math.pow(1 + inflationRate, Math.max(0, age - pensionStartAge))) : 0;
+      const netWithdrawal = Math.max(0, currentAnnualNeed - annualPension);
+
+      if (i > 0) {
+        if (totalSub > 0) {
+          subGen = Math.max(0, (subGen - netWithdrawal * (subGen / totalSub)) * (1 + returnRate));
+          subIsa = Math.max(0, (subIsa - netWithdrawal * (subIsa / totalSub)) * (1 + returnRate));
+          subPen = Math.max(0, (subPen - netWithdrawal * (subPen / totalSub)) * (1 + returnRate));
+          subIrp = Math.max(0, (subIrp - netWithdrawal * (subIrp / totalSub)) * (1 + returnRate));
+          subAnn = Math.max(0, (subAnn - netWithdrawal * (subAnn / totalSub)) * (1 + returnRate));
+          subOvs = Math.max(0, (subOvs - netWithdrawal * (subOvs / totalSub)) * (1 + returnRate));
+        }
+      }
+
+      const calculatedTotal = subGen + subIsa + subPen + subIrp + subAnn + subOvs;
+      if (calculatedTotal <= 0 && depletionAge === null) {
+        depletionAge = age;
+      }
+
+      dataPoints.push({
+        age: age,
+        year: year,
+        balance: Math.round(calculatedTotal / 10000),
+        gen: Math.round(subGen / 10000),
+        isa: Math.round(subIsa / 10000),
+        pen: Math.round(subPen / 10000),
+        irp: Math.round(subIrp / 10000),
+        ann: Math.round(subAnn / 10000),
+        ovs: Math.round(subOvs / 10000),
+        annualNeed: Math.round(currentAnnualNeed / 120000),
+        pensionMonthly: Math.round(annualPension / 120000),
+        netWithdrawalAnnual: Math.round(netWithdrawal / 10000),
+        annualPensionTotal: Math.round(annualPension / 10000)
+      });
+    }
+
+    latestDataPoints = dataPoints;
+
+    const kpiDep = document.getElementById('kpiDepletionAge');
+    if (depletionAge !== null) {
+      kpiDep.textContent = depletionAge + '세 고갈 위험';
+      kpiDep.style.color = 'var(--accent-red)';
+    } else {
+      kpiDep.textContent = '100세+ 잔여 (안전)';
+      kpiDep.style.color = 'var(--accent-green)';
+    }
+
+    renderAdvancedChart(dataPoints, retireAge, pensionStartAge);
+    renderStackedBarChart(dataPoints, pensionStartAge);
+    updateSummaryText(totalAsset, accGeneral, accIsa, accPension, accIrp, accAnnuity, accOverseas, targetMonthlyDraw, depletionAge);
+  }
+
+  // 1번 라인 차트
+  function renderAdvancedChart(dataPoints, retireAge, pensionStartAge) {
+    const svg = document.getElementById('chartSvg');
+    const container = document.getElementById('chartContainer');
+    const tooltip = document.getElementById('chartTooltip');
+    
+    svg.innerHTML = '';
+
+    const width = container.clientWidth > 0 ? container.clientWidth : 900;
+    const height = container.clientHeight > 0 ? container.clientHeight : 360;
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+    const paddingLeft = 70, paddingRight = 30, paddingTop = 40, paddingBottom = 40;
+    const maxBal = Math.max(...dataPoints.map(d => d.balance), 100000);
+    const maxFlow = Math.max(...dataPoints.map(d => Math.max(d.netWithdrawalAnnual, d.annualPensionTotal)), 1000);
+
+    const getX = (idx) => paddingLeft + (idx / (dataPoints.length - 1)) * (width - paddingLeft - paddingRight);
+    const getYBal = (val) => height - paddingBottom - (val / maxBal) * (height - paddingTop - paddingBottom);
+    const getYFlow = (val) => height - paddingBottom - (val / maxFlow) * (height - paddingTop - paddingBottom) * 0.4;
+
+    const crevasseEndIdx = Math.min(pensionStartAge - retireAge, dataPoints.length - 1);
+    if (crevasseEndIdx > 0) {
+      const xStart = getX(0), xEnd = getX(crevasseEndIdx);
+      const crevasseRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      crevasseRect.setAttribute('x', xStart); crevasseRect.setAttribute('y', paddingTop);
+      crevasseRect.setAttribute('width', xEnd - xStart); crevasseRect.setAttribute('height', height - paddingTop - paddingBottom);
+      crevasseRect.setAttribute('fill', 'rgba(236, 72, 153, 0.08)');
+      crevasseRect.setAttribute('stroke', 'rgba(236, 72, 153, 0.3)');
+      crevasseRect.setAttribute('stroke-dasharray', '4 4');
+      svg.appendChild(crevasseRect);
+
+      const crevasseText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      crevasseText.setAttribute('x', xStart + 12); crevasseText.setAttribute('y', paddingTop + 20);
+      crevasseText.setAttribute('fill', '#ec4899'); crevasseText.setAttribute('font-size', '11'); crevasseText.setAttribute('font-weight', 'bold');
+      crevasseText.textContent = '은퇴 크레바스 (소득 공백기)';
+      svg.appendChild(crevasseText);
+    }
+
+    for (let i = 0; i <= 4; i++) {
+      const yVal = (maxBal / 4) * i;
+      const yPos = getYBal(yVal);
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', paddingLeft); line.setAttribute('y1', yPos);
+      line.setAttribute('x2', width - paddingRight); line.setAttribute('y2', yPos);
+      line.setAttribute('stroke', 'rgba(255, 255, 255, 0.07)');
+      svg.appendChild(line);
+
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', paddingLeft - 8); text.setAttribute('y', yPos + 4);
+      text.setAttribute('fill', '#64748b'); text.setAttribute('font-size', '10'); text.setAttribute('text-anchor', 'end');
+      text.textContent = (yVal >= 10000) ? (yVal / 10000).toFixed(0) + '억' : formatComma(yVal);
+      svg.appendChild(text);
+    }
+
+    dataPoints.forEach((d, i) => {
+      if (i % 5 === 0 || d.age === pensionStartAge) {
+        const xPos = getX(i);
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', xPos); text.setAttribute('y', height - 12);
+        text.setAttribute('fill', d.age === pensionStartAge ? '#10b981' : '#64748b');
+        text.setAttribute('font-size', d.age === pensionStartAge ? '11' : '10'); text.setAttribute('font-weight', d.age === pensionStartAge ? 'bold' : 'normal');
+        text.setAttribute('text-anchor', 'middle');
+        text.textContent = `${d.age}세`;
+        svg.appendChild(text);
+      }
+    });
+
+    let pathDraw = '';
+    dataPoints.forEach((d, i) => {
+      const x = getX(i), y = getYFlow(d.netWithdrawalAnnual);
+      pathDraw += (i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
+    });
+    const pDraw = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    pDraw.setAttribute('d', pathDraw); pDraw.setAttribute('fill', 'none'); pDraw.setAttribute('stroke', '#f97316'); pDraw.setAttribute('stroke-width', '2'); pDraw.setAttribute('stroke-dasharray', '3 3');
+    svg.appendChild(pDraw);
+
+    let pathPension = '';
+    dataPoints.forEach((d, i) => {
+      const x = getX(i), y = getYFlow(d.annualPensionTotal);
+      pathPension += (i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
+    });
+    const pPension = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    pPension.setAttribute('d', pathPension); pPension.setAttribute('fill', 'none'); pPension.setAttribute('stroke', '#10b981'); pPension.setAttribute('stroke-width', '2');
+    svg.appendChild(pPension);
+
+    let pathBal = '';
+    dataPoints.forEach((d, i) => {
+      const x = getX(i), y = getYBal(d.balance);
+      pathBal += (i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
+    });
+    const pBal = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    pBal.setAttribute('d', pathBal); pBal.setAttribute('fill', 'none'); pBal.setAttribute('stroke', '#3b82f6'); pBal.setAttribute('stroke-width', '3');
+    svg.appendChild(pBal);
+
+    const activeMarker = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    activeMarker.setAttribute('r', '7');
+    activeMarker.setAttribute('fill', '#ef4444');
+    activeMarker.setAttribute('stroke', '#ffffff');
+    activeMarker.setAttribute('stroke-width', '2');
+    activeMarker.style.opacity = '0';
+    svg.appendChild(activeMarker);
+
+    const handleMove = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect();
+      const mouseX = clientX - rect.left;
+      
+      let closestIdx = 0;
+      let minDst = Infinity;
+      dataPoints.forEach((d, idx) => {
+        const cx = getX(idx);
+        const dst = Math.abs(cx - mouseX);
+        if (dst < minDst) {
+          minDst = dst;
+          closestIdx = idx;
+        }
+      });
+
+      const d = dataPoints[closestIdx];
+      const cx = getX(closestIdx);
+      const cy = getYBal(d.balance);
+
+      activeMarker.setAttribute('cx', cx);
+      activeMarker.setAttribute('cy', cy);
+      activeMarker.style.opacity = '1';
+
+      tooltip.style.opacity = '1';
+      let tooltipX = cx + 15;
+      let tooltipY = cy - 50;
+      if (tooltipX + 210 > width) tooltipX = cx - 215;
+      if (tooltipY < 10) tooltipY = cy + 15;
+
+      tooltip.style.left = tooltipX + 'px';
+      tooltip.style.top = tooltipY + 'px';
+      tooltip.innerHTML = `
+        <strong style="color:#60a5fa;">${d.age}세 (${d.year}년) 지표</strong><hr style="border-color:#334155;margin:4px 0;"/>
+        잔여 자산: <b style="color:#ffffff;">${formatAssetDisplay(d.balance)}</b><br/>
+        총 생활비(월): ${formatComma(d.annualNeed)} 만 원<br/>
+        국민연금(월): <span style="color:#10b981;">${formatComma(d.pensionMonthly)} 만 원</span>
+      `;
+    };
+
+    const handleLeave = () => {
+      activeMarker.style.opacity = '0';
+      tooltip.style.opacity = '0';
+    };
+
+    container.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
+    container.addEventListener('mouseleave', handleLeave);
+    container.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 0) handleMove(e.touches[0].clientX, e.touches[0].clientY);
+    });
+    container.addEventListener('touchend', (e) => {
+      // 손을 떼었을 때(touchend)는 툴팁을 숨기지 않고 해당 지점의 세부 상태를 고정하여 보여줌
+    });
+    // 컨테이너 자체를 완전히 벗어날 때만 숨김
+    container.addEventListener('mouseleave', handleLeave);
+  }
+
+  // 2번 스택 바 차트
+  function renderStackedBarChart(dataPoints, pensionStartAge) {
+    const svg = document.getElementById('barChartSvg');
+    const container = document.getElementById('barChartContainer');
+    const tooltip = document.getElementById('barChartTooltip');
+    
+    svg.innerHTML = '';
+
+    const width = container.clientWidth > 0 ? container.clientWidth : 900;
+    const height = container.clientHeight > 0 ? container.clientHeight : 360;
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+    const paddingLeft = 70, paddingRight = 30, paddingTop = 30, paddingBottom = 40;
+    const maxBal = Math.max(...dataPoints.map(d => d.balance), 100000);
+
+    const getX = (idx) => paddingLeft + (idx / dataPoints.length) * (width - paddingLeft - paddingRight);
+    const getY = (val) => height - paddingBottom - (val / maxBal) * (height - paddingTop - paddingBottom);
+
+    for (let i = 0; i <= 4; i++) {
+      const yVal = (maxBal / 4) * i;
+      const yPos = getY(yVal);
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', paddingLeft); line.setAttribute('y1', yPos);
+      line.setAttribute('x2', width - paddingRight); line.setAttribute('y2', yPos);
+      line.setAttribute('stroke', 'rgba(255, 255, 255, 0.07)');
+      svg.appendChild(line);
+
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', paddingLeft - 8); text.setAttribute('y', yPos + 4);
+      text.setAttribute('fill', '#64748b'); text.setAttribute('font-size', '10'); text.setAttribute('text-anchor', 'end');
+      text.textContent = (yVal >= 10000) ? (yVal / 10000).toFixed(1) + '억' : formatComma(yVal);
+      svg.appendChild(text);
+    }
+
+    const barWidth = Math.max(4, Math.floor((width - paddingLeft - paddingRight) / dataPoints.length) - 4);
+
+    dataPoints.forEach((d, i) => {
+      const x = getX(i) + 2;
+      const hGen = (d.gen / maxBal) * (height - paddingTop - paddingBottom);
+      const hIsa = (d.isa / maxBal) * (height - paddingTop - paddingBottom);
+      const hPen = (d.pen / maxBal) * (height - paddingTop - paddingBottom);
+      const hIrp = (d.irp / maxBal) * (height - paddingTop - paddingBottom);
+      const hAnn = (d.ann / maxBal) * (height - paddingTop - paddingBottom);
+      const hOvs = (d.ovs / maxBal) * (height - paddingTop - paddingBottom);
+
+      let currentY = height - paddingBottom;
+
+      const createRect = (h, color) => {
+        if (h <= 0) return null;
+        currentY -= h;
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x', x); rect.setAttribute('y', currentY);
+        rect.setAttribute('width', barWidth); rect.setAttribute('height', h);
+        rect.setAttribute('fill', color);
+        return rect;
+      };
+
+      const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      const r1 = createRect(hGen, '#3b82f6'); if(r1) group.appendChild(r1);
+      const r2 = createRect(hIsa, '#f97316'); if(r2) group.appendChild(r2);
+      const r3 = createRect(hPen, '#10b981'); if(r3) group.appendChild(r3);
+      const r4 = createRect(hIrp, '#ec4899'); if(r4) group.appendChild(r4);
+      const r5 = createRect(hAnn, '#14b8a6'); if(r5) group.appendChild(r5);
+      const r6 = createRect(hOvs, '#eab308'); if(r6) group.appendChild(r6);
+
+      svg.appendChild(group);
+
+      if (i % 5 === 0 || d.age === pensionStartAge) {
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', x + barWidth / 2); text.setAttribute('y', height - 12);
+        text.setAttribute('fill', d.age === pensionStartAge ? '#10b981' : '#64748b');
+        text.setAttribute('font-size', d.age === pensionStartAge ? '11' : '10');
+        text.setAttribute('font-weight', d.age === pensionStartAge ? 'bold' : 'normal');
+        text.setAttribute('text-anchor', 'middle');
+        text.textContent = `${d.age}세`;
+        svg.appendChild(text);
+      }
+    });
+
+    const handleBarMove = (clientX, clientY) => {
+      const rect = svg.getBoundingClientRect();
+      const mouseX = clientX - rect.left;
+
+      let closestIdx = 0;
+      let minDst = Infinity;
+      dataPoints.forEach((d, idx) => {
+        const bx = getX(idx) + barWidth / 2;
+        const dst = Math.abs(bx - mouseX);
+        if (dst < minDst) {
+          minDst = dst;
+          closestIdx = idx;
+        }
+      });
+
+      const d = dataPoints[closestIdx];
+      const bx = getX(closestIdx);
+
+      tooltip.style.opacity = '1';
+      let tooltipX = bx + 15, tooltipY = getY(d.balance) - 50;
+      if (tooltipX + 230 > width) tooltipX = bx - 240;
+      if (tooltipY < 10) tooltipY = getY(d.balance) + 15;
+
+      tooltip.style.left = tooltipX + 'px';
+      tooltip.style.top = tooltipY + 'px';
+      tooltip.innerHTML = `
+        <strong style="color:#60a5fa;">${d.age}세 (${d.year}년) 자산 성향</strong><hr style="border-color:#334155;margin:4px 0;"/>
+        🔵 일반계좌: <b>${formatAssetDisplay(d.gen)}</b><br/>
+        🟠 중개형 ISA: <b>${formatAssetDisplay(d.isa)}</b><br/>
+        🟢 연금저축: <b>${formatAssetDisplay(d.pen)}</b><br/>
+        🟣 IRP: <b>${formatAssetDisplay(d.irp)}</b><br/>
+        🔹 연금보험: <b>${formatAssetDisplay(d.ann)}</b><br/>
+        🟡 해외계좌: <b>${formatAssetDisplay(d.ovs)}</b><hr style="border-color:#334155;margin:4px 0;"/>
+        총 평가금액: <span style="color:#10b981;font-weight:bold;">${formatAssetDisplay(d.balance)}</span>
+      `;
+    };
+
+    const handleBarLeave = () => {
+      tooltip.style.opacity = '0';
+    };
+
+    container.addEventListener('mousemove', (e) => handleBarMove(e.clientX, e.clientY));
+    container.addEventListener('mouseleave', handleBarLeave);
+    container.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 0) handleBarMove(e.touches[0].clientX, e.touches[0].clientY);
+    });
+    container.addEventListener('touchend', (e) => {
+      // 터치 손을 떼었을 때 고정 유지
+    });
+    container.addEventListener('mouseleave', handleBarLeave);
+  }
+
+  function updateSummaryText(total, gen, isa, pen, irp, ann, ovs, draw, dep) {
+    const text = `[은퇴 자산 인출 및 크레바스 방어 시뮬레이션 결과 (65세=2040년)]\n` +
+      `----------------------------------------\n` +
+      `■ 총 은퇴 목표 자산: ${formatAssetDisplay(total)}\n` +
+      `  - 일반계좌/CMA: ${formatComma(gen)}만 원\n` +
+      `  - 중개형 ISA: ${formatComma(isa)}만 원\n` +
+      `  - 연금저축: ${formatComma(pen)}만 원\n` +
+      `  - IRP: ${formatComma(irp)}만 원\n` +
+      `  - 연금보험: ${formatComma(ann)}만 원\n` +
+      `  - 해외계좌: ${formatComma(ovs)}만 원\n` +
+      `■ 은퇴 후 월 인출 희망액: ${formatComma(draw)}만 원\n` +
+      `■ 자산 고갈 예상 결과: ${dep !== null ? dep + '세 고갈 위험' : '100세 이상 안정적 유지'}\n` +
+      `※ 본 요약은 참고용 추정치입니다.`;
+    
+    const box = document.getElementById('copySummaryBox');
+    box.style.display = 'block';
+    box.value = text;
+  }
+
+  function copyResultSummary() {
+    const box = document.getElementById('copySummaryBox');
+    box.select();
+    document.execCommand('copy');
+    alert('시뮬레이션 결과 요약이 클립보드에 복사되었습니다!');
+  }
+
+  function copyTableForGoogleDocs() {
+    if (!latestDataPoints || latestDataPoints.length === 0) {
+      alert('복사할 데이터가 없습니다.');
+      return;
+    }
+
+    let tsvContent = "나이(세)\t연도(년)\t총 잔여자산(만 원)\t물가반영 월 생활비(만 원)\t국민연금 월 수령액(만 원)\t사적자산 연간 순인출(만 원)\n";
+
+    latestDataPoints.forEach(d => {
+      tsvContent += `${d.age}\t${d.year}\t${d.balance}\t${d.annualNeed}\t${d.pensionMonthly}\t${d.netWithdrawalAnnual}\n`;
+    });
+
+    navigator.clipboard.writeText(tsvContent).then(() => {
+      alert('📋 35년치 상세 표가 클립보드에 복사되었습니다!\n\n💡 구글 문서(Google Docs), 구글 스프레드시트, 또는 엑셀에 들어가서 [붙여넣기(Ctrl+V)] 하시면 깔끔한 표로 바로 들어갑니다.');
+    }).catch(err => {
+      console.error('클립보드 복사 실패:', err);
+      alert('복사에 실패했습니다. 브라우저 권한을 확인해주세요.');
+    });
+  }
+
+  window.addEventListener('resize', recalculateAll);
+  window.onload = recalculateAll;
+</script>
+
+</body>
+</html>
