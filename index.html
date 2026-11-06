@@ -488,24 +488,24 @@
 </div>
 
 <script>
-  const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTsfWHfBBs2owjyhb8FWBRAN3wMN_93WAulOu6mJpDrPubgAakHFJzGS7nTkbi-JmMMbxlycIeQUbFf/pub?gid=1655940963&single=true&output=csv';
-  let latestDataPoints = [];
-
   async function fetchGoogleSheetsData() {
+    // 여기에 직접 제공해주신 스프레드시트 CSV 링크를 넣어주세요!
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTsfWHfBBs2owjyhb8FWBRAN3wMN_93WAulOu6mJpDrPubgAakHFJzGS7nTkbi-JmMMbxlycIeQUbFf/pub?gid=1655940963&single=true&output=csv';
+    
     if (!CSV_URL || CSV_URL.includes('YOUR_GOOGLE_SHEET_CSV_URL_HERE')) return;
     try {
       const response = await fetch(CSV_URL);
       const csvText = await response.text();
       const lines = csvText.split('\n');
+      
       lines.forEach(line => {
         const parts = line.split(',').map(item => item.trim().replace(/^"|"$/g, ''));
         if (parts.length < 2) return;
         const key = parts[0], val = parts[1];
         if (!val) return;
 
-        // 구글 시트에서 가져온 값이 만 원 단위일 경우 원 단위( * 10000 )로 환산하여 대입
-        const numVal = parseCommaInt(val);
-        const wonVal = numVal < 100000 ? numVal * 10000 : numVal;
+        // 원 단위 숫자를 그대로 파싱
+        const wonVal = parseCommaInt(val);
 
         if (key.includes('일반계좌')) document.getElementById('accGeneral').value = formatComma(wonVal);
         if (key.includes('중개형 ISA') || key.includes('ISA')) document.getElementById('accIsa').value = formatComma(wonVal);
@@ -513,6 +513,8 @@
         if (key.includes('IRP')) document.getElementById('accIrp').value = formatComma(wonVal);
         if (key.includes('연금보험')) document.getElementById('accAnnuity').value = formatComma(wonVal);
         if (key.includes('해외계좌')) document.getElementById('accOverseas').value = formatComma(wonVal);
+        
+        // 국민연금은 그대로 월 수령액(만 원 단위)으로 입력받음
         if (key.includes('국민연금')) document.getElementById('pensionMonthly').value = formatComma(parseCommaInt(val));
       });
       recalculateAll();
