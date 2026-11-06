@@ -46,12 +46,13 @@
       transition: background-color 0.3s, color 0.3s;
     }
 
+    /* PC에서도 모바일처럼 세로로 길게 보이도록 max-width를 700px로 제한하고 1열 배치 */
     .container {
-      max-width: 1400px;
+      max-width: 700px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 20px;
     }
 
     .header {
@@ -60,11 +61,10 @@
       align-items: center;
       padding-bottom: 16px;
       border-bottom: 2px solid var(--border-color);
-      grid-column: 1 / -1;
     }
 
     .header h1 {
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       font-weight: 700;
     }
 
@@ -73,44 +73,33 @@
       align-items: center;
       gap: 8px;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: var(--text-muted);
       user-select: none;
-    }
-
-    /* 2열 레이아웃 그리드 설정 (갤럭시 S26 울트라 및 태블릿/PC 대응) */
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 24px;
-    }
-
-    .full-width {
-      grid-column: 1 / -1;
     }
 
     .kpi-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
+      gap: 12px;
     }
 
     .kpi-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      padding: 16px;
+      padding: 14px;
       box-shadow: var(--shadow);
     }
 
     .kpi-card .label {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .kpi-card .value {
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       font-weight: 700;
       color: var(--primary);
     }
@@ -119,17 +108,16 @@
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      padding: 20px;
+      padding: 18px;
       box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      gap: 12px;
     }
 
     .section-title {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 600;
-      margin-bottom: 16px;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -154,7 +142,7 @@
 
     .scenario-chips {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
     }
 
@@ -162,8 +150,8 @@
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 6px;
-      padding: 6px 12px;
-      font-size: 0.85rem;
+      padding: 5px 10px;
+      font-size: 0.8rem;
       color: var(--text-main);
       cursor: pointer;
       transition: all 0.2s;
@@ -178,28 +166,32 @@
     .input-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
+      gap: 12px;
     }
 
     .input-group {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
+    }
+
+    .input-group.full-width {
+      grid-column: 1 / -1;
     }
 
     .input-group label {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-weight: 500;
       color: var(--text-muted);
     }
 
     .input-group input, .input-group select {
-      padding: 10px 12px;
+      padding: 9px 10px;
       border: 1px solid var(--border-color);
       border-radius: 8px;
       background: var(--bg-color);
       color: var(--text-main);
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       outline: none;
       width: 100%;
     }
@@ -208,46 +200,44 @@
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 16px;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 8px;
     }
 
     .chart-legend-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 16px;
-      margin-bottom: 16px;
-      font-size: 0.85rem;
+      gap: 12px;
+      font-size: 0.8rem;
     }
 
     .legend-item {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
     }
 
     .legend-dot {
-      width: 10px;
-      height: 10px;
+      width: 9px;
+      height: 9px;
       border-radius: 50%;
     }
 
     .legend-box {
-      width: 12px;
-      height: 12px;
+      width: 11px;
+      height: 11px;
       border-radius: 2px;
     }
 
     .chart-container {
       position: relative;
       width: 100%;
-      height: 380px;
+      height: 320px;
       background: #090d16;
-      border-radius: 12px;
+      border-radius: 10px;
       border: 1px solid var(--border-color);
       overflow: visible;
-      padding: 10px;
+      padding: 8px;
       touch-action: none;
     }
 
@@ -259,29 +249,29 @@
 
     .tooltip {
       position: absolute;
-      padding: 12px 16px;
+      padding: 10px 14px;
       background: rgba(15, 23, 42, 0.98);
       border: 1px solid var(--primary);
       border-radius: 8px;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.15s ease-out;
       z-index: 999;
       color: #f8fafc;
-      line-height: 1.5;
-      min-width: 190px;
+      line-height: 1.4;
+      min-width: 180px;
     }
 
     .btn-group {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
     }
 
     .btn {
-      padding: 10px 18px;
+      padding: 8px 14px;
       background: var(--primary);
       color: white;
       border: none;
@@ -290,7 +280,7 @@
       cursor: pointer;
       text-align: center;
       transition: background 0.2s;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
 
     .btn:hover {
@@ -306,21 +296,15 @@
 
     #copySummaryBox {
       width: 100%;
-      height: 130px;
-      margin-top: 12px;
-      padding: 12px;
+      height: 110px;
+      padding: 10px;
       border-radius: 8px;
       border: 1px solid var(--border-color);
       background: var(--bg-color);
       color: var(--text-main);
       font-family: monospace;
+      font-size: 0.85rem;
       display: block;
-    }
-
-    @media (max-width: 768px) {
-      .dashboard-grid {
-        grid-template-columns: 1fr;
-      }
     }
   </style>
 </head>
@@ -335,190 +319,176 @@
     </div>
   </div>
 
-  <!-- 전체 대시보드 2열 구조 -->
-  <div class="dashboard-grid">
-    
-    <!-- 좌측 컬럼: 입력 및 요약 설정 -->
-    <div style="display: flex; flex-direction: column; gap: 24px;">
-      
-      <!-- 상단 핵심 요약 (KPI) -->
-      <div class="kpi-grid full-width">
-        <div class="kpi-card">
-          <div class="label">은퇴 총자산</div>
-          <div class="value" id="kpiTotalAsset">0억 0,000만 원</div>
-        </div>
-        <div class="kpi-card">
-          <div class="label">월 희망 인출액</div>
-          <div class="value" id="kpiMonthlyDraw">0 만 원</div>
-        </div>
-        <div class="kpi-card">
-          <div class="label">초기 연간 인출률</div>
-          <div class="value" id="kpiDrawRate">0 %</div>
-        </div>
-        <div class="kpi-card">
-          <div class="label">자산 고갈 예상 연령</div>
-          <div class="value" id="kpiDepletionAge" style="color: var(--accent-green);">100세+ 잔여</div>
-        </div>
-      </div>
-
-      <!-- 인출률 중심 시나리오 바 -->
-      <div class="section-card" style="padding: 14px 20px;">
-        <div class="scenario-minimal-bar">
-          <span class="scenario-label">⚡ 인출률 시나리오:</span>
-          <div class="scenario-chips">
-            <button class="sc-chip" id="sc1" onclick="applyScenario(3.3)">🛡️ 보수적 3.3%</button>
-            <button class="sc-chip active" id="sc2" onclick="applyScenario(4.0)">⚖️ 표준 4.0%</button>
-            <button class="sc-chip" id="sc3" onclick="applyScenario(5.0)">🔥 적극적 5.0%</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 자산 입력 섹션 -->
-      <div class="section-card">
-        <div class="section-title">💼 1. 보유 계좌별 자산 (만 원)</div>
-        <div class="input-grid">
-          <div class="input-group">
-            <label for="accGeneral">일반계좌/CMA</label>
-            <input type="text" id="accGeneral" value="1,800" oninput="formatAndRecalc(this)">
-          </div>
-          <div class="input-group">
-            <label for="accIsa">중개형 ISA</label>
-            <input type="text" id="accIsa" value="14,000" oninput="formatAndRecalc(this)">
-          </div>
-          <div class="input-group">
-            <label for="accPension">연금저축</label>
-            <input type="text" id="accPension" value="16,000" oninput="formatAndRecalc(this)">
-          </div>
-          <div class="input-group">
-            <label for="accIrp">IRP 퇴직연금</label>
-            <input type="text" id="accIrp" value="3,000" oninput="formatAndRecalc(this)">
-          </div>
-          <div class="input-group">
-            <label for="accAnnuity">연금보험</label>
-            <input type="text" id="accAnnuity" value="10,000" oninput="formatAndRecalc(this)">
-          </div>
-          <div class="input-group">
-            <label for="accOverseas">해외계좌</label>
-            <input type="text" id="accOverseas" value="6,500" oninput="formatAndRecalc(this)">
-          </div>
-        </div>
-      </div>
-
-      <!-- 조건 설정 섹션 -->
-      <div class="section-card">
-        <div class="section-title">⚙️ 2. 연금 및 인출/수익률 설정</div>
-        <div class="input-grid">
-          <div class="input-group">
-            <label for="pensionStartAge">국민연금 개시 연령</label>
-            <select id="pensionStartAge" onchange="recalculateAll()">
-              <option value="60">60세 (조기)</option>
-              <option value="65" selected>65세 (정상)</option>
-              <option value="70">70세 (연기)</option>
-            </select>
-          </div>
-          <div class="input-group">
-            <label for="pensionMonthly">국민연금 월 수령액(만)</label>
-            <input type="text" id="pensionMonthly" value="110" oninput="formatAndRecalc(this)">
-          </div>
-          <div class="input-group">
-            <label for="retireAge">은퇴 시점 연령(세)</label>
-            <input type="number" id="retireAge" value="59" min="50" max="70" onchange="recalculateAll()">
-          </div>
-          <div class="input-group">
-            <label for="targetWithdrawal">목표 월 생활비(만)</label>
-            <input type="text" id="targetWithdrawal" value="300" oninput="onManualWithdrawalChange()">
-          </div>
-          <div class="input-group">
-            <label for="customDrawRate">초기 연간 인출률(%)</label>
-            <input type="number" id="customDrawRate" value="4.0" step="0.1" min="1.0" max="15.0" oninput="onCustomRateChange()">
-          </div>
-          <div class="input-group">
-            <label for="inflationRate">연 물가상승률(%)</label>
-            <input type="number" id="inflationRate" value="3.0" step="0.1" onchange="recalculateAll()">
-          </div>
-          <div class="input-group full-width" style="grid-column: 1 / -1;">
-            <label for="returnRate">은퇴 후 연 투자 수익률 (%)</label>
-            <input type="number" id="returnRate" value="6.0" step="0.1" onchange="recalculateAll()">
-          </div>
-        </div>
-      </div>
-
+  <!-- 상단 핵심 요약 (KPI) -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="label">은퇴 총자산</div>
+      <div class="value" id="kpiTotalAsset">0원</div>
     </div>
-
-    <!-- 우측 컬럼: 차트 및 결과 리포트 -->
-    <div style="display: flex; flex-direction: column; gap: 24px;">
-
-      <!-- 첫 번째 차트: 요청하신 이미지 레이아웃 반영 (제목, 서브텍스트, 범례, 툴팁 동작) -->
-      <div class="section-card">
-        <div class="chart-header" style="flex-direction: column; align-items: flex-start; gap: 4px; margin-bottom: 10px;">
-          <div class="section-title" style="margin-bottom:0;">
-            📈 나이별 총 자산 잔액 & 현금흐름 궤적 차트 (65세=2040년)
-          </div>
-          <div style="font-size: 0.8rem; color: var(--text-muted);">
-            손을 떼면 세부 상태가 고정되고, 차트를 벗어나면 사라집니다.
-          </div>
-        </div>
-
-        <div class="chart-legend-grid">
-          <div class="legend-item"><div class="legend-dot" style="background: var(--primary);"></div><span>총 잔여 자산 궤적</span></div>
-          <div class="legend-item"><div class="legend-dot" style="background: var(--accent-orange);"></div><span>사적 자산 연간 순 인출액</span></div>
-          <div class="legend-item"><div class="legend-dot" style="background: var(--accent-green);"></div><span>국민연금 연간 수령액</span></div>
-          <div class="legend-item"><div class="legend-box" style="background: rgba(236, 72, 153, 0.15); border: 1px dashed var(--accent-purple);"></div><span>은퇴 크레바스 (소득 공백기)</span></div>
-        </div>
-
-        <div class="chart-container" id="chartContainer">
-          <div class="tooltip" id="chartTooltip"></div>
-          <svg class="chart-svg" id="chartSvg"></svg>
-        </div>
-      </div>
-
-      <!-- 2번 스택 바 차트 -->
-      <div class="section-card">
-        <div class="chart-header">
-          <div class="section-title" style="margin-bottom:0;">
-            📊 계좌별 자산 구성 (Stacked Bar)
-          </div>
-          <div style="font-size: 0.75rem; color: var(--text-muted);">
-            터치하여 세부 상태 유지 가능
-          </div>
-        </div>
-
-        <div class="chart-legend-grid">
-          <div class="legend-item"><div class="legend-dot" style="background: var(--primary);"></div><span>일반</span></div>
-          <div class="legend-item"><div class="legend-dot" style="background: var(--accent-orange);"></div><span>ISA</span></div>
-          <div class="legend-item"><div class="legend-dot" style="background: var(--accent-green);"></div><span>연금저축</span></div>
-          <div class="legend-item"><div class="legend-dot" style="background: var(--accent-purple);"></div><span>IRP</span></div>
-          <div class="legend-item"><div class="legend-dot" style="background: var(--accent-teal);"></div><span>보험</span></div>
-          <div class="legend-item"><div class="legend-dot" style="background: #eab308;"></div><span>해외</span></div>
-        </div>
-
-        <div class="chart-container" id="barChartContainer">
-          <div class="tooltip" id="barChartTooltip"></div>
-          <svg class="chart-svg" id="barChartSvg"></svg>
-        </div>
-      </div>
-
-      <!-- 결과 요약 보고서 및 표 복사 섹션 -->
-      <div class="section-card">
-        <div class="chart-header" style="margin-bottom: 8px;">
-          <div class="section-title" style="margin-bottom:0;">
-            📄 결과 요약 및 표 복사
-          </div>
-          <div class="btn-group">
-            <button class="btn" onclick="copyResultSummary()">요약 복사</button>
-            <button class="btn btn-accent" onclick="copyTableForGoogleDocs()">📋 상세 표 복사</button>
-          </div>
-        </div>
-        <textarea id="copySummaryBox" readonly></textarea>
-      </div>
-
+    <div class="kpi-card">
+      <div class="label">월 희망 인출액</div>
+      <div class="value" id="kpiMonthlyDraw">0 만 원</div>
     </div>
-
+    <div class="kpi-card">
+      <div class="label">초기 연간 인출률</div>
+      <div class="value" id="kpiDrawRate">0 %</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">자산 고갈 예상 연령</div>
+      <div class="value" id="kpiDepletionAge" style="color: var(--accent-green);">100세+ 잔여</div>
+    </div>
   </div>
+
+  <!-- 인출률 중심 시나리오 바 -->
+  <div class="section-card" style="padding: 12px 16px;">
+    <div class="scenario-minimal-bar">
+      <span class="scenario-label">⚡ 인출률 시나리오:</span>
+      <div class="scenario-chips">
+        <button class="sc-chip" id="sc1" onclick="applyScenario(3.3)">🛡️ 보수적 3.3%</button>
+        <button class="sc-chip active" id="sc2" onclick="applyScenario(4.0)">⚖️ 표준 4.0%</button>
+        <button class="sc-chip" id="sc3" onclick="applyScenario(5.0)">🔥 적극적 5.0%</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 자산 입력 섹션 (원 단위 적용) -->
+  <div class="section-card">
+    <div class="section-title">💼 1. 보유 계좌별 자산 (원 단위)</div>
+    <div class="input-grid">
+      <div class="input-group">
+        <label for="accGeneral">일반계좌/CMA</label>
+        <input type="text" id="accGeneral" value="18,000,000" oninput="formatAssetInput(this)">
+      </div>
+      <div class="input-group">
+        <label for="accIsa">중개형 ISA</label>
+        <input type="text" id="accIsa" value="140,000,000" oninput="formatAssetInput(this)">
+      </div>
+      <div class="input-group">
+        <label for="accPension">연금저축</label>
+        <input type="text" id="accPension" value="160,000,000" oninput="formatAssetInput(this)">
+      </div>
+      <div class="input-group">
+        <label for="accIrp">IRP 퇴직연금</label>
+        <input type="text" id="accIrp" value="30,000,000" oninput="formatAssetInput(this)">
+      </div>
+      <div class="input-group">
+        <label for="accAnnuity">연금보험</label>
+        <input type="text" id="accAnnuity" value="100,000,000" oninput="formatAssetInput(this)">
+      </div>
+      <div class="input-group">
+        <label for="accOverseas">해외계좌</label>
+        <input type="text" id="accOverseas" value="65,000,000" oninput="formatAssetInput(this)">
+      </div>
+    </div>
+  </div>
+
+  <!-- 조건 설정 섹션 -->
+  <div class="section-card">
+    <div class="section-title">⚙️ 2. 연금 및 인출/수익률 설정</div>
+    <div class="input-grid">
+      <div class="input-group">
+        <label for="pensionStartAge">국민연금 개시 연령</label>
+        <select id="pensionStartAge" onchange="recalculateAll()">
+          <option value="60">60세 (조기)</option>
+          <option value="65" selected>65세 (정상)</option>
+          <option value="70">70세 (연기)</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label for="pensionMonthly">국민연금 월 수령액(만)</label>
+        <input type="text" id="pensionMonthly" value="110" oninput="formatAndRecalc(this)">
+      </div>
+      <div class="input-group">
+        <label for="retireAge">은퇴 시점 연령(세)</label>
+        <input type="number" id="retireAge" value="59" min="50" max="70" onchange="recalculateAll()">
+      </div>
+      <div class="input-group">
+        <label for="targetWithdrawal">목표 월 생활비(만)</label>
+        <input type="text" id="targetWithdrawal" value="300" oninput="onManualWithdrawalChange()">
+      </div>
+      <div class="input-group">
+        <label for="customDrawRate">초기 연간 인출률(%)</label>
+        <input type="number" id="customDrawRate" value="4.0" step="0.1" min="1.0" max="15.0" oninput="onCustomRateChange()">
+      </div>
+      <div class="input-group">
+        <label for="inflationRate">연 물가상승률(%)</label>
+        <input type="number" id="inflationRate" value="3.0" step="0.1" onchange="recalculateAll()">
+      </div>
+      <div class="input-group full-width">
+        <label for="returnRate">은퇴 후 연 투자 수익률 (%)</label>
+        <input type="number" id="returnRate" value="6.0" step="0.1" onchange="recalculateAll()">
+      </div>
+    </div>
+  </div>
+
+  <!-- 첫 번째 차트 -->
+  <div class="section-card">
+    <div class="chart-header">
+      <div class="section-title" style="margin-bottom:0;">
+        📈 나이별 총 자산 잔액 & 현금흐름 궤적
+      </div>
+      <div style="font-size: 0.75rem; color: var(--text-muted);">
+        터치/클릭하여 세부 상태 고정 가능
+      </div>
+    </div>
+
+    <div class="chart-legend-grid">
+      <div class="legend-item"><div class="legend-dot" style="background: var(--primary);"></div><span>총 자산 궤적</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background: var(--accent-orange);"></div><span>순 인출액</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background: var(--accent-green);"></div><span>국민연금</span></div>
+      <div class="legend-item"><div class="legend-box" style="background: rgba(236, 72, 153, 0.15); border: 1px dashed var(--accent-purple);"></div><span>크레바스</span></div>
+    </div>
+
+    <div class="chart-container" id="chartContainer">
+      <div class="tooltip" id="chartTooltip"></div>
+      <svg class="chart-svg" id="chartSvg"></svg>
+    </div>
+  </div>
+
+  <!-- 2번 스택 바 차트 -->
+  <div class="section-card">
+    <div class="chart-header">
+      <div class="section-title" style="margin-bottom:0;">
+        📊 계좌별 자산 구성 (Stacked Bar)
+      </div>
+      <div style="font-size: 0.75rem; color: var(--text-muted);">
+        터치/클릭하여 세부 상태 고정 가능
+      </div>
+    </div>
+
+    <div class="chart-legend-grid">
+      <div class="legend-item"><div class="legend-dot" style="background: var(--primary);"></div><span>일반</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background: var(--accent-orange);"></div><span>ISA</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background: var(--accent-green);"></div><span>연금저축</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background: var(--accent-purple);"></div><span>IRP</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background: var(--accent-teal);"></div><span>보험</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background: #eab308;"></div><span>해외</span></div>
+    </div>
+
+    <div class="chart-container" id="barChartContainer">
+      <div class="tooltip" id="barChartTooltip"></div>
+      <svg class="chart-svg" id="barChartSvg"></svg>
+    </div>
+  </div>
+
+  <!-- 결과 요약 보고서 및 표 복사 섹션 -->
+  <div class="section-card">
+    <div class="chart-header">
+      <div class="section-title" style="margin-bottom:0;">
+        📄 결과 요약 및 표 복사
+      </div>
+      <div class="btn-group">
+        <button class="btn" onclick="copyResultSummary()">요약 복사</button>
+        <button class="btn btn-accent" onclick="copyTableForGoogleDocs()">📋 상세 표 복사</button>
+      </div>
+    </div>
+    <textarea id="copySummaryBox" readonly></textarea>
+  </div>
+
 </div>
 
 <script>
-  const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTsfWHfBBs2owjyhb8FWBRAN3wMN_93WAulOu6mJpDrPubgAakHFJzGS7nTkbi-JmMMbxlycIeQUbFf/pub?gid=1655940963&single=true&output=csv';
+  const CSV_URL = 'YOUR_GOOGLE_SHEET_CSV_URL_HERE';
   let latestDataPoints = [];
 
   async function fetchGoogleSheetsData() {
@@ -533,14 +503,19 @@
         const key = parts[0], val = parts[1];
         if (!val) return;
 
-        if (key.includes('일반계좌')) document.getElementById('accGeneral').value = formatComma(parseCommaInt(val));
-        if (key.includes('중개형 ISA') || key.includes('ISA')) document.getElementById('accIsa').value = formatComma(parseCommaInt(val));
-        if (key.includes('연금저축')) document.getElementById('accPension').value = formatComma(parseCommaInt(val));
-        if (key.includes('IRP')) document.getElementById('accIrp').value = formatComma(parseCommaInt(val));
-        if (key.includes('연금보험')) document.getElementById('accAnnuity').value = formatComma(parseCommaInt(val));
-        if (key.includes('해외계좌')) document.getElementById('accOverseas').value = formatComma(parseCommaInt(val));
+        // 구글 시트에서 가져온 값이 만 원 단위일 경우 원 단위( * 10000 )로 환산하여 대입
+        const numVal = parseCommaInt(val);
+        const wonVal = numVal < 100000 ? numVal * 10000 : numVal;
+
+        if (key.includes('일반계좌')) document.getElementById('accGeneral').value = formatComma(wonVal);
+        if (key.includes('중개형 ISA') || key.includes('ISA')) document.getElementById('accIsa').value = formatComma(wonVal);
+        if (key.includes('연금저축')) document.getElementById('accPension').value = formatComma(wonVal);
+        if (key.includes('IRP')) document.getElementById('accIrp').value = formatComma(wonVal);
+        if (key.includes('연금보험')) document.getElementById('accAnnuity').value = formatComma(wonVal);
+        if (key.includes('해외계좌')) document.getElementById('accOverseas').value = formatComma(wonVal);
         if (key.includes('국민연금')) document.getElementById('pensionMonthly').value = formatComma(parseCommaInt(val));
       });
+      recalculateAll();
     } catch (err) {
       console.error('구글 스프레드시트 데이터 연동 실패:', err);
     }
@@ -555,11 +530,29 @@
     return num.toLocaleString('ko-KR');
   }
 
-  function formatAssetDisplay(amountInTenThousand) {
-    const raw = parseCommaInt(amountInTenThousand);
-    const totalMan = raw * 10000;
-    const eok = Math.floor(totalMan / 100000000);
-    const remainderMan = Math.floor((totalMan % 100000000) / 10000);
+  // 원 단위 입력을 실시간으로 천단위 콤마 포맷팅하고 재계산 실행
+  function formatAssetInput(inputEl) {
+    let num = parseCommaInt(inputEl.value);
+    inputEl.value = formatComma(num);
+
+    const totalAssetWon = getTotalAssetWon();
+    const rate = (parseFloat(document.getElementById('customDrawRate').value) || 4.0) / 100;
+    const annualDraw = totalAssetWon * rate;
+    const monthlyDraw = Math.round(annualDraw / 12 / 10000);
+    document.getElementById('targetWithdrawal').value = formatComma(monthlyDraw);
+
+    recalculateAll();
+  }
+
+  function getTotalAssetWon() {
+    return ['accGeneral', 'accIsa', 'accPension', 'accIrp', 'accAnnuity', 'accOverseas']
+      .reduce((sum, id) => sum + parseCommaInt(document.getElementById(id).value), 0);
+  }
+
+  function formatAssetDisplay(amountInWon) {
+    const totalMan = Math.round(amountInWon / 10000);
+    const eok = Math.floor(totalMan / 10000);
+    const remainderMan = totalMan % 10000;
 
     if (eok > 0) {
       if (remainderMan > 0) {
@@ -567,32 +560,21 @@
       }
       return `${eok}억 원`;
     }
-    return `${formatComma(raw)}만 원`;
+    return `${formatComma(totalMan)}만 원`;
   }
 
   function formatAndRecalc(inputEl) {
     let num = parseCommaInt(inputEl.value);
     inputEl.value = formatComma(num);
-    
-    const totalAssetMan = ['accGeneral', 'accIsa', 'accPension', 'accIrp', 'accAnnuity', 'accOverseas']
-      .reduce((sum, id) => sum + parseCommaInt(document.getElementById(id).value), 0);
-
-    const rate = (parseFloat(document.getElementById('customDrawRate').value) || 4.0) / 100;
-    const annualDraw = (totalAssetMan * 10000) * rate;
-    const monthlyDraw = Math.round(annualDraw / 12 / 10000);
-    document.getElementById('targetWithdrawal').value = formatComma(monthlyDraw);
-
     recalculateAll();
   }
 
   function onManualWithdrawalChange() {
     document.querySelectorAll('.sc-chip').forEach(b => b.classList.remove('active'));
-    const totalAssetMan = ['accGeneral', 'accIsa', 'accPension', 'accIrp', 'accAnnuity', 'accOverseas']
-      .reduce((sum, id) => sum + parseCommaInt(document.getElementById(id).value), 0);
-
+    const totalAssetWon = getTotalAssetWon();
     const targetMonthlyDraw = parseCommaInt(document.getElementById('targetWithdrawal').value);
-    if (totalAssetMan > 0) {
-      const calculatedRate = ((targetMonthlyDraw * 12 * 10000) / (totalAssetMan * 10000)) * 100;
+    if (totalAssetWon > 0) {
+      const calculatedRate = ((targetMonthlyDraw * 12 * 10000) / totalAssetWon) * 100;
       document.getElementById('customDrawRate').value = calculatedRate.toFixed(1);
     }
     recalculateAll();
@@ -600,11 +582,9 @@
 
   function onCustomRateChange() {
     document.querySelectorAll('.sc-chip').forEach(b => b.classList.remove('active'));
-    const totalAssetMan = ['accGeneral', 'accIsa', 'accPension', 'accIrp', 'accAnnuity', 'accOverseas']
-      .reduce((sum, id) => sum + parseCommaInt(document.getElementById(id).value), 0);
-
+    const totalAssetWon = getTotalAssetWon();
     const rate = (parseFloat(document.getElementById('customDrawRate').value) || 4.0) / 100;
-    const annualDraw = (totalAssetMan * 10000) * rate;
+    const annualDraw = totalAssetWon * rate;
     const monthlyDraw = Math.round(annualDraw / 12 / 10000);
 
     document.getElementById('targetWithdrawal').value = formatComma(monthlyDraw);
@@ -641,7 +621,7 @@
     const accAnnuity = parseCommaInt(document.getElementById('accAnnuity').value);
     const accOverseas = parseCommaInt(document.getElementById('accOverseas').value);
 
-    const totalAsset = accGeneral + accIsa + accPension + accIrp + accAnnuity + accOverseas;
+    const totalAssetWon = accGeneral + accIsa + accPension + accIrp + accAnnuity + accOverseas;
 
     const retireAge = parseInt(document.getElementById('retireAge').value, 10) || 59;
     const targetMonthlyDraw = parseCommaInt(document.getElementById('targetWithdrawal').value);
@@ -650,19 +630,19 @@
     const inflationRate = (parseFloat(document.getElementById('inflationRate').value) || 3.0) / 100;
     const returnRate = (parseFloat(document.getElementById('returnRate').value) || 6.0) / 100;
 
-    document.getElementById('kpiTotalAsset').textContent = formatAssetDisplay(totalAsset);
+    document.getElementById('kpiTotalAsset').textContent = formatAssetDisplay(totalAssetWon);
     document.getElementById('kpiMonthlyDraw').textContent = formatComma(targetMonthlyDraw) + ' 만 원';
 
-    const annualDrawInitial = targetMonthlyDraw * 12;
-    const initialDrawRate = totalAsset > 0 ? ((annualDrawInitial / totalAsset) * 100).toFixed(1) : 0;
+    const annualDrawInitial = targetMonthlyDraw * 12 * 10000;
+    const initialDrawRate = totalAssetWon > 0 ? ((annualDrawInitial / totalAssetWon) * 100).toFixed(1) : 0;
     document.getElementById('kpiDrawRate').textContent = initialDrawRate + ' %';
 
-    let subGen = accGeneral * 10000;
-    let subIsa = accIsa * 10000;
-    let subPen = accPension * 10000;
-    let subIrp = accIrp * 10000;
-    let subAnn = accAnnuity * 10000;
-    let subOvs = accOverseas * 10000;
+    let subGen = accGeneral;
+    let subIsa = accIsa;
+    let subPen = accPension;
+    let subIrp = accIrp;
+    let subAnn = accAnnuity;
+    let subOvs = accOverseas;
 
     const baseYear = 2040 - 65;
     let depletionAge = null;
@@ -673,7 +653,7 @@
       const year = baseYear + age;
       const totalSub = subGen + subIsa + subPen + subIrp + subAnn + subOvs;
 
-      const currentAnnualNeed = annualDrawInitial * 10000 * Math.pow(1 + inflationRate, i);
+      const currentAnnualNeed = annualDrawInitial * Math.pow(1 + inflationRate, i);
       const annualPension = (age >= pensionStartAge) ? (pensionMonthly * 10000 * 12 * Math.pow(1 + inflationRate, Math.max(0, age - pensionStartAge))) : 0;
       const netWithdrawal = Math.max(0, currentAnnualNeed - annualPension);
 
@@ -691,13 +671,8 @@
 
       dataPoints.push({
         age, year,
-        balance: Math.round(calculatedTotal / 10000),
-        gen: Math.round(subGen / 10000),
-        isa: Math.round(subIsa / 10000),
-        pen: Math.round(subPen / 10000),
-        irp: Math.round(subIrp / 10000),
-        ann: Math.round(subAnn / 10000),
-        ovs: Math.round(subOvs / 10000),
+        balance: calculatedTotal,
+        gen: subGen, isa: subIsa, pen: subPen, irp: subIrp, ann: subAnn, ovs: subOvs,
         annualNeed: Math.round(currentAnnualNeed / 120000),
         pensionMonthly: Math.round(annualPension / 120000),
         netWithdrawalAnnual: Math.round(netWithdrawal / 10000),
@@ -717,7 +692,7 @@
 
     renderAdvancedChart(dataPoints, retireAge, pensionStartAge);
     renderStackedBarChart(dataPoints, pensionStartAge);
-    updateSummaryText(totalAsset, accGeneral, accIsa, accPension, accIrp, accAnnuity, accOverseas, targetMonthlyDraw, depletionAge);
+    updateSummaryText(totalAssetWon, accGeneral, accIsa, accPension, accIrp, accAnnuity, accOverseas, targetMonthlyDraw, depletionAge);
   }
 
   function renderAdvancedChart(dataPoints, retireAge, pensionStartAge) {
@@ -727,18 +702,17 @@
     svg.innerHTML = '';
 
     const width = container.clientWidth > 0 ? container.clientWidth : 500;
-    const height = container.clientHeight > 0 ? container.clientHeight : 360;
+    const height = container.clientHeight > 0 ? container.clientHeight : 320;
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
 
-    const paddingLeft = 60, paddingRight = 20, paddingTop = 30, paddingBottom = 35;
-    const maxBal = Math.max(...dataPoints.map(d => d.balance), 100000);
+    const paddingLeft = 55, paddingRight = 15, paddingTop = 25, paddingBottom = 30;
+    const maxBal = Math.max(...dataPoints.map(d => d.balance), 100000000);
     const maxFlow = Math.max(...dataPoints.map(d => Math.max(d.netWithdrawalAnnual, d.annualPensionTotal)), 1000);
 
     const getX = (idx) => paddingLeft + (idx / (dataPoints.length - 1)) * (width - paddingLeft - paddingRight);
     const getYBal = (val) => height - paddingBottom - (val / maxBal) * (height - paddingTop - paddingBottom);
     const getYFlow = (val) => height - paddingBottom - (val / maxFlow) * (height - paddingTop - paddingBottom) * 0.4;
 
-    // X축 및 Y축 기본 축 선
     const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     xAxis.setAttribute('x1', paddingLeft); xAxis.setAttribute('y1', height - paddingBottom);
     xAxis.setAttribute('x2', width - paddingRight); xAxis.setAttribute('y2', height - paddingBottom);
@@ -761,12 +735,6 @@
       crevasseRect.setAttribute('stroke', 'rgba(236, 72, 153, 0.3)');
       crevasseRect.setAttribute('stroke-dasharray', '4 4');
       svg.appendChild(crevasseRect);
-
-      const crevasseText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      crevasseText.setAttribute('x', getX(0) + 8); crevasseText.setAttribute('y', paddingTop + 16);
-      crevasseText.setAttribute('fill', '#ec4899'); crevasseText.setAttribute('font-size', '10'); crevasseText.setAttribute('font-weight', 'bold');
-      crevasseText.textContent = '은퇴 크레바스 (소득 공백기)';
-      svg.appendChild(crevasseText);
     }
 
     for (let i = 0; i <= 4; i++) {
@@ -779,20 +747,19 @@
       svg.appendChild(line);
 
       const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      text.setAttribute('x', paddingLeft - 6); text.setAttribute('y', yPos + 4);
-      text.setAttribute('fill', '#94a3b8'); text.setAttribute('font-size', '10'); text.setAttribute('text-anchor', 'end');
-      text.textContent = (yVal >= 10000) ? (yVal / 10000).toFixed(0) + '억' : formatComma(yVal);
+      text.setAttribute('x', paddingLeft - 5); text.setAttribute('y', yPos + 4);
+      text.setAttribute('fill', '#94a3b8'); text.setAttribute('font-size', '9.5'); text.setAttribute('text-anchor', 'end');
+      text.textContent = (yVal >= 100000000) ? (yVal / 100000000).toFixed(0) + '억' : (yVal / 10000).toFixed(0) + '만';
       svg.appendChild(text);
     }
 
-    // X축 연령 레이블
     dataPoints.forEach((d, i) => {
       if (i % 5 === 0 || d.age === pensionStartAge) {
         const xPos = getX(i);
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttribute('x', xPos); text.setAttribute('y', height - paddingBottom + 16);
+        text.setAttribute('x', xPos); text.setAttribute('y', height - paddingBottom + 14);
         text.setAttribute('fill', d.age === pensionStartAge ? '#10b981' : '#94a3b8');
-        text.setAttribute('font-size', d.age === pensionStartAge ? '11' : '10');
+        text.setAttribute('font-size', d.age === pensionStartAge ? '10.5' : '9.5');
         text.setAttribute('font-weight', d.age === pensionStartAge ? 'bold' : 'normal');
         text.setAttribute('text-anchor', 'middle');
         text.textContent = `${d.age}세`;
@@ -800,7 +767,6 @@
       }
     });
 
-    // 사적 자산 순 인출액 선 (주황색 점선)
     let pathDraw = '';
     dataPoints.forEach((d, i) => {
       const x = getX(i), y = getYFlow(d.netWithdrawalAnnual);
@@ -810,7 +776,6 @@
     pDraw.setAttribute('d', pathDraw); pDraw.setAttribute('fill', 'none'); pDraw.setAttribute('stroke', '#f97316'); pDraw.setAttribute('stroke-width', '2'); pDraw.setAttribute('stroke-dasharray', '3 3');
     svg.appendChild(pDraw);
 
-    // 국민연금 수령액 선 (초록색 실선)
     let pathPension = '';
     dataPoints.forEach((d, i) => {
       const x = getX(i), y = getYFlow(d.annualPensionTotal);
@@ -820,7 +785,6 @@
     pPension.setAttribute('d', pathPension); pPension.setAttribute('fill', 'none'); pPension.setAttribute('stroke', '#10b981'); pPension.setAttribute('stroke-width', '2');
     svg.appendChild(pPension);
 
-    // 총 자산 잔액 궤적 선 (파란색 실선)
     let pathBal = '';
     dataPoints.forEach((d, i) => {
       const x = getX(i), y = getYBal(d.balance);
@@ -831,7 +795,7 @@
     svg.appendChild(pBal);
 
     const activeMarker = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    activeMarker.setAttribute('r', '6'); activeMarker.setAttribute('fill', '#ef4444'); activeMarker.setAttribute('stroke', '#ffffff'); activeMarker.setAttribute('stroke-width', '2');
+    activeMarker.setAttribute('r', '5.5'); activeMarker.setAttribute('fill', '#ef4444'); activeMarker.setAttribute('stroke', '#ffffff'); activeMarker.setAttribute('stroke-width', '2');
     activeMarker.style.opacity = '0';
     svg.appendChild(activeMarker);
 
@@ -854,57 +818,25 @@
       activeMarker.style.opacity = '1';
 
       tooltip.style.opacity = '1';
-      let tooltipX = cx + 10, tooltipY = cy - 65;
-      if (tooltipX + 210 > width) tooltipX = cx - 215;
-      if (tooltipY < 10) tooltipY = cy + 15;
+      let tooltipX = cx + 10, tooltipY = cy - 60;
+      if (tooltipX + 200 > width) tooltipX = cx - 210;
+      if (tooltipY < 10) tooltipY = cy + 10;
 
       tooltip.style.left = tooltipX + 'px';
       tooltip.style.top = tooltipY + 'px';
       tooltip.innerHTML = `
-        <strong style="color:#60a5fa;">${d.age}세 (${d.year}년) 지표</strong><hr style="border-color:#334155;margin:4px 0;"/>
+        <strong style="color:#60a5fa;">${d.age}세 (${d.year}년)</strong><br/>
         잔여 자산: <b style="color:#ffffff;">${formatAssetDisplay(d.balance)}</b><br/>
         총 생활비(월): ${formatComma(d.annualNeed)} 만 원<br/>
         국민연금(월): <span style="color:#10b981;">${formatComma(d.pensionMonthly)} 만 원</span>
       `;
     };
 
-    // 마우스 이동 시: 고정 상태가 아닐 때만 툴팁 및 마커 갱신
-    container.onmousemove = (e) => {
-      if (!isLocked) {
-        updatePoint(e.clientX);
-      }
-    };
-
-    // 터치 이동 시: 손가락을 움직이는 동안 실시간 갱신
-    container.ontouchmove = (e) => {
-      if (e.touches.length > 0) {
-        isLocked = false;
-        updatePoint(e.touches[0].clientX);
-      }
-    };
-
-    // 손가락을 떼었을 때(touchend): 현재 위치에 툴팁과 마커 고정
-    container.ontouchend = (e) => {
-      isLocked = true;
-      if (e.changedTouches.length > 0) {
-        updatePoint(e.changedTouches[0].clientX);
-      }
-    };
-
-    // 마우스 클릭 시: 고정 상태 토글
-    container.onclick = (e) => {
-      isLocked = !isLocked;
-      if (isLocked) {
-        updatePoint(e.clientX);
-      }
-    };
-
-    // 차트 영역을 벗어날 때(mouseleave): 고정 해제 및 숨김 처리
-    container.onmouseleave = () => {
-      isLocked = false;
-      activeMarker.style.opacity = '0';
-      tooltip.style.opacity = '0';
-    };
+    container.onmousemove = (e) => { if (!isLocked) updatePoint(e.clientX); };
+    container.ontouchmove = (e) => { if (e.touches.length > 0) { isLocked = false; updatePoint(e.touches[0].clientX); } };
+    container.ontouchend = (e) => { isLocked = true; if (e.changedTouches.length > 0) updatePoint(e.changedTouches[0].clientX); };
+    container.onclick = (e) => { isLocked = !isLocked; if (isLocked) updatePoint(e.clientX); };
+    container.onmouseleave = () => { isLocked = false; activeMarker.style.opacity = '0'; tooltip.style.opacity = '0'; };
   }
 
   function renderStackedBarChart(dataPoints, pensionStartAge) {
@@ -914,11 +846,11 @@
     svg.innerHTML = '';
 
     const width = container.clientWidth > 0 ? container.clientWidth : 500;
-    const height = container.clientHeight > 0 ? container.clientHeight : 360;
+    const height = container.clientHeight > 0 ? container.clientHeight : 320;
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
 
-    const paddingLeft = 60, paddingRight = 20, paddingTop = 25, paddingBottom = 35;
-    const maxBal = Math.max(...dataPoints.map(d => d.balance), 100000);
+    const paddingLeft = 55, paddingRight = 15, paddingTop = 20, paddingBottom = 30;
+    const maxBal = Math.max(...dataPoints.map(d => d.balance), 100000000);
 
     const getX = (idx) => paddingLeft + (idx / dataPoints.length) * (width - paddingLeft - paddingRight);
     const getY = (val) => height - paddingBottom - (val / maxBal) * (height - paddingTop - paddingBottom);
@@ -945,9 +877,9 @@
       svg.appendChild(line);
 
       const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      text.setAttribute('x', paddingLeft - 6); text.setAttribute('y', yPos + 4);
-      text.setAttribute('fill', '#94a3b8'); text.setAttribute('font-size', '10'); text.setAttribute('text-anchor', 'end');
-      text.textContent = (yVal >= 10000) ? (yVal / 10000).toFixed(1) + '억' : formatComma(yVal);
+      text.setAttribute('x', paddingLeft - 5); text.setAttribute('y', yPos + 4);
+      text.setAttribute('fill', '#94a3b8'); text.setAttribute('font-size', '9.5'); text.setAttribute('text-anchor', 'end');
+      text.textContent = (yVal >= 100000000) ? (yVal / 100000000).toFixed(1) + '억' : (yVal / 10000).toFixed(0) + '만';
       svg.appendChild(text);
     }
 
@@ -983,9 +915,9 @@
 
       if (i % 5 === 0 || d.age === pensionStartAge) {
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttribute('x', x + barWidth / 2); text.setAttribute('y', height - paddingBottom + 16);
+        text.setAttribute('x', x + barWidth / 2); text.setAttribute('y', height - paddingBottom + 14);
         text.setAttribute('fill', d.age === pensionStartAge ? '#10b981' : '#94a3b8');
-        text.setAttribute('font-size', d.age === pensionStartAge ? '11' : '10');
+        text.setAttribute('font-size', d.age === pensionStartAge ? '10.5' : '9.5');
         text.setAttribute('font-weight', d.age === pensionStartAge ? 'bold' : 'normal');
         text.setAttribute('text-anchor', 'middle');
         text.textContent = `${d.age}세`;
@@ -1031,7 +963,7 @@
 
   function updateSummaryText(total, gen, isa, pen, irp, ann, ovs, draw, dep) {
     const text = `[은퇴 자산 인출 및 크레바스 방어 시뮬레이션 결과]\n` +
-      `■ 총 자산: ${formatAssetDisplay(total)} (일반:${gen}|ISA:${isa}|연금:${pen}|IRP:${irp}|보험:${ann}|해외:${ovs})\n` +
+      `■ 총 자산: ${formatAssetDisplay(total)} (일반:${formatAssetDisplay(gen)}|ISA:${formatAssetDisplay(isa)}|연금:${formatAssetDisplay(pen)}|IRP:${formatAssetDisplay(irp)}|보험:${formatAssetDisplay(ann)}|해외:${formatAssetDisplay(ovs)})\n` +
       `■ 월 인출 희망액: ${formatComma(draw)}만 원\n` +
       `■ 고갈 예상: ${dep !== null ? dep + '세 고갈 위험' : '100세 이상 안정적 유지'}`;
     document.getElementById('copySummaryBox').value = text;
@@ -1046,7 +978,7 @@
 
   function copyTableForGoogleDocs() {
     if (!latestDataPoints || latestDataPoints.length === 0) return;
-    let tsv = "나이\t연도\t총자산\t월생활비\t국민연금\t순인출\n";
+    let tsv = "나이\t연도\t총자산(원)\t월생활비(만)\t국민연금(만)\t순인출(만)\n";
     latestDataPoints.forEach(d => {
       tsv += `${d.age}\t${d.year}\t${d.balance}\t${d.annualNeed}\t${d.pensionMonthly}\t${d.netWithdrawalAnnual}\n`;
     });
