@@ -494,44 +494,42 @@
     return num.toLocaleString('ko-KR');
   }
 
-  // 쉼표가 포함된 금액 문자열을 정확한 원 단위 정수로 파싱 (예: "17,157,803" -> 17157803)
-  function parseExactInt(str) {
-    if (!str) return 0;
-    const clean = str.toString().replace(/[^0-9]/g, '');
-    const num = parseInt(clean, 10);
-    return isNaN(num) ? 0 : num;
+  function parseCommaInt(valStr) {
+    if (!valStr) return 0;
+    const cleanStr = valStr.toString().replace(/,/g, '').replace(/\s/g, '').trim();
+    return parseInt(cleanStr, 10) || 0;
   }
 
   async function fetchGoogleSheetsData() {
     if (!CSV_URL) return;
     try {
       const response = await fetch(CSV_URL + '&_t=' + new Date().getTime());
-      const text = await response.text();
-      
-      // 행 단위로 분리
-      const rows = text.split(/\r?\n/);
-      
-      rows.forEach(row => {
-        // 셀 분리 시 쌍따옴표 제거
-        const cols = row.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-        if (cols.length >= 2) {
-          const key = cols[0];
-          const val = cols[1];
+      const rawText = await response.text();
 
-          if (key.includes('일반계좌')) {
-            document.getElementById('accGeneral').value = formatComma(parseExactInt(val));
-          } else if (key.includes('ISA')) {
-            document.getElementById('accIsa').value = formatComma(parseExactInt(val));
-          } else if (key.includes('연금저축')) {
-            document.getElementById('accPension').value = formatComma(parseExactInt(val));
-          } else if (key.includes('IRP')) {
-            document.getElementById('accIrp').value = formatComma(parseExactInt(val));
-          } else if (key.includes('연금보험')) {
-            document.getElementById('accAnnuity').value = formatComma(parseExactInt(val));
-          } else if (key.includes('해외계좌')) {
-            document.getElementById('accOverseas').value = formatComma(parseExactInt(val));
-          } else if (key.includes('국민연금')) {
-            document.getElementById('pensionMonthly').value = formatComma(parseExactInt(val));
+      // 줄바꿈으로 분리하여 각 행에서 계좌명 바로 뒤의 숫자(쉼표 포함)를 완전 추출
+      const lines = rawText.split(/\r?\n/);
+
+      lines.forEach(line => {
+        // 계좌 키워드 탐색
+        let targetId = null;
+        if (line.includes('일반계좌')) targetId = 'accGeneral';
+        else if (line.includes('ISA')) targetId = 'accIsa';
+        else if (line.includes('연금저축')) targetId = 'accPension';
+        else if (line.includes('IRP')) targetId = 'accIrp';
+        else if (line.includes('연금보험')) targetId = 'accAnnuity';
+        else if (line.includes('해외계좌')) targetId = 'accOverseas';
+        else if (line.includes('국민연금')) targetId = 'pensionMonthly';
+
+        if (targetId) {
+          // 키워드 뒤에 오는 모든 숫자 및 쉼표(,) 조합을 끝까지 추출하는 정규식
+          const match = line.match(/[\d,]+/g);
+          if (match) {
+            // 연결된 쉼표 표기 숫자를 하나로 합침 (예: ["17", "157", "803"] -> "17157803")
+            const joinedNumStr = match.join('');
+            const val = parseInt(joinedNumStr, 10);
+            if (!isNaN(val)) {
+              document.getElementById(targetId).value = formatComma(val);
+            }
           }
         }
       });
@@ -543,7 +541,7 @@
   }
 
   function formatAssetInput(inputEl) {
-    let num = parseExactInt(inputEl.value);
+    let num = parseCommaInt(inputEl.value);
     inputEl.value = formatComma(num);
 
     const totalAssetWon = getTotalAssetWon();
@@ -557,7 +555,7 @@
 
   function getTotalAssetWon() {
     return ['accGeneral', 'accIsa', 'accPension', 'accIrp', 'accAnnuity', 'accOverseas']
-      .reduce((sum, id) => sum + parseExactInt(document.getElementById(id).value), 0);
+      .reduce((sum, id) => sum + parseCommaInt(document.getElementById(id).value), 0);
   }
 
   function formatAssetDisplay(amountInWon) {
@@ -575,7 +573,7 @@
   }
 
   function formatAndRecalc(inputEl) {
-    let num = parseExactInt(inputEl.value);
+    let num = parseCommaInt(inputEl.value);
     inputEl.value = formatComma(num);
     recalculateAll();
   }
@@ -583,7 +581,7 @@
   function onManualWithdrawalChange() {
     document.querySelectorAll('.sc-chip').forEach(b => b.classList.remove('active'));
     const totalAssetWon = getTotalAssetWon();
-    const targetMonthlyDraw = parseExactInt(document.getElementById('targetWithdrawal').value);
+    const targetMonthlyDraw = parseCommaInt(document.getElementById('targetWithdrawal').value);
     if (totalAssetWon > 0) {
       const calculatedRate = ((targetMonthlyDraw * 12 * 10000) / totalAssetWon) * 100;
       document.getElementById('customDrawRate').value = calculatedRate.toFixed(1);
@@ -625,19 +623,19 @@
   }
 
   function recalculateAll() {
-    const accGeneral = parseExactInt(document.getElementById('accGeneral').value);
-    const accIsa = parseExactInt(document.getElementById('accIsa').value);
-    const accPension = parseExactInt(document.getElementById('accPension').value);
-    const accIrp = parseExactInt(document.getElementById('accIrp').value);
-    const accAnnuity = parseExactInt(document.getElementById('accAnnuity').value);
-    const accOverseas = parseExactInt(document.getElementById('accOverseas').value);
+    const accGeneral = parseCommaInt(document.getElementById('accGeneral').value);
+    const accIsa = parseCommaInt(document.getElementById('accIsa').value);
+    const accPension = parseCommaInt(document.getElementById('accPension').value);
+    const accIrp = parseCommaInt(document.getElementById('accIrp').value);
+    const accAnnuity = parseCommaInt(document.getElementById('accAnnuity').value);
+    const accOverseas = parseCommaInt(document.getElementById('accOverseas').value);
 
     const totalAssetWon = accGeneral + accIsa + accPension + accIrp + accAnnuity + accOverseas;
 
     const retireAge = parseInt(document.getElementById('retireAge').value, 10) || 59;
-    const targetMonthlyDraw = parseExactInt(document.getElementById('targetWithdrawal').value);
+    const targetMonthlyDraw = parseCommaInt(document.getElementById('targetWithdrawal').value);
     const pensionStartAge = parseInt(document.getElementById('pensionStartAge').value, 10) || 65;
-    const pensionMonthly = parseExactInt(document.getElementById('pensionMonthly').value);
+    const pensionMonthly = parseCommaInt(document.getElementById('pensionMonthly').value);
     const inflationRate = (parseFloat(document.getElementById('inflationRate').value) || 3.0) / 100;
     const returnRate = (parseFloat(document.getElementById('returnRate').value) || 6.0) / 100;
 
