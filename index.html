@@ -490,7 +490,6 @@
   const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTsfWHfBBs2owjyhb8FWBRAN3wMN_93WAulOu6mJpDrPubgAakHFJzGS7nTkbi-JmMMbxlycIeQUbFf/pub?gid=1655940963&single=true&output=csv';
   let latestDataPoints = [];
 
-  // 모든 쉼표와 공백을 제거하고 순수 정수로 파싱하는 공통 함수
   function parseCommaInt(valStr) {
     if (!valStr) return 0;
     const cleanStr = valStr.toString().replace(/,/g, '').replace(/\s/g, '').trim();
@@ -519,13 +518,11 @@
         else if (line.includes('국민연금')) targetId = 'pensionMonthly';
 
         if (targetId) {
-          // 키워드 이후 부분에서 숫자와 쉼표 매칭
           const match = line.match(/[\d,]+/g);
           if (match) {
             const joinedNumStr = match.join('');
             let rawNum = parseInt(joinedNumStr, 10);
             if (!isNaN(rawNum) && rawNum > 0) {
-              // 국민연금(만 원 단위) 제외하고 자산 계좌는 모두 만 원 이하 단위 표기 시 10,000을 곱해 원 단위로 통일
               if (targetId !== 'pensionMonthly' && rawNum < 1000000) {
                 rawNum = rawNum * 10000;
               }
