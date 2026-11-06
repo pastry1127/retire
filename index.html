@@ -350,7 +350,7 @@
     </div>
   </div>
 
-  <!-- 자산 입력 섹션 (모든 계좌 원 단위 적용) -->
+  <!-- 자산 입력 섹션 (원 단위 적용) -->
   <div class="section-card">
     <div class="section-title">💼 1. 보유 계좌별 자산 (원 단위)</div>
     <div class="input-grid">
@@ -490,6 +490,7 @@
   const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTsfWHfBBs2owjyhb8FWBRAN3wMN_93WAulOu6mJpDrPubgAakHFJzGS7nTkbi-JmMMbxlycIeQUbFf/pub?gid=1655940963&single=true&output=csv';
   let latestDataPoints = [];
 
+  // 문자열에서 모든 쉼표와 공백을 제거하고 정수로 파싱
   function parseCommaInt(valStr) {
     if (!valStr) return 0;
     const cleanStr = valStr.toString().replace(/,/g, '').replace(/\s/g, '').trim();
@@ -503,33 +504,37 @@
   async function fetchGoogleSheetsData() {
     if (!CSV_URL) return;
     try {
+      // 캐시 방지를 위해 timestamp 파라미터 추가
       const response = await fetch(CSV_URL + '&_t=' + new Date().getTime());
-      const rawText = await response.text();
-      const lines = rawText.split(/\r?\n/);
-
+      const csvText = await response.text();
+      
+      // CSV 줄바꿈 구분
+      const lines = csvText.split(/\r?\n/);
+      
       lines.forEach(line => {
-        let targetId = null;
-        if (line.includes('일반계좌')) targetId = 'accGeneral';
-        else if (line.includes('ISA')) targetId = 'accIsa';
-        else if (line.includes('연금저축')) targetId = 'accPension';
-        else if (line.includes('IRP')) targetId = 'accIrp';
-        else if (line.includes('연금보험')) targetId = 'accAnnuity';
-        else if (line.includes('해외계좌')) targetId = 'accOverseas';
-        else if (line.includes('국민연금')) targetId = 'pensionMonthly';
+        // 따옴표 및 쉼표 파싱
+        const parts = line.split(',').map(item => item.trim().replace(/^"|"$/g, ''));
+        if (parts.length < 2) return;
+        const key = parts[0];
+        const val = parts[1];
+        if (!val) return;
 
-        if (targetId) {
-          const match = line.match(/[\d,]+/g);
-          if (match) {
-            const joinedNumStr = match.join('');
-            let rawNum = parseInt(joinedNumStr, 10);
-            if (!isNaN(rawNum) && rawNum > 0) {
-              if (targetId !== 'pensionMonthly' && rawNum < 1000000) {
-                rawNum = rawNum * 10000;
-              }
-              document.getElementById(targetId).value = formatComma(rawNum);
-            }
-          }
+        let rawNum = parseCommaInt(val);
+        
+        // 구글 시트에 17,157,803 처럼 큰 원 단위 숫자로 적혀있으면 그대로 인식,
+        // 만약 17157 처럼 만 원 단위로 적혀있으면 10,000을 곱함
+        let wonVal = rawNum;
+        if (rawNum > 0 && rawNum < 1000000) {
+          wonVal = rawNum * 10000;
         }
+
+        if (key.includes('일반계좌')) document.getElementById('accGeneral').value = formatComma(wonVal);
+        if (key.includes('중개형 ISA') || key.includes('ISA')) document.getElementById('accIsa').value = formatComma(wonVal);
+        if (key.includes('연금저축')) document.getElementById('accPension').value = formatComma(wonVal);
+        if (key.includes('IRP')) document.getElementById('accIrp').value = formatComma(wonVal);
+        if (key.includes('연금보험')) document.getElementById('accAnnuity').value = formatComma(wonVal);
+        if (key.includes('해외계좌')) document.getElementById('accOverseas').value = formatComma(wonVal);
+        if (key.includes('국민연금')) document.getElementById('pensionMonthly').value = formatComma(rawNum);
       });
 
       recalculateAll();
