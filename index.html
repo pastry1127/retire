@@ -671,8 +671,8 @@
       // 국민연금 (개시연령 이후 반영 및 물가상승률 반영)
       const annualNatPension = (age >= pensionStartAge) ? (pensionMonthly * 10000 * 12 * Math.pow(1 + inflationRate, Math.max(0, age - pensionStartAge))) : 0;
       
-      // 연금보험 (개시연령 이후 반영 및 물가상승률 반영)
-      const annualPrivAnnuity = (age >= annuityStartAge) ? (annuityMonthly * 10000 * 12 * Math.pow(1 + inflationRate, Math.max(0, age - annuityStartAge))) : 0;
+      // 연금보험 (개시연령 이후 월 수령액 고정 반영)
+      const annualPrivAnnuity = (age >= annuityStartAge) ? (annuityMonthly * 10000 * 12) : 0;
 
       const annualTotalPension = annualNatPension + annualPrivAnnuity;
       const netWithdrawal = Math.max(0, currentAnnualNeed - annualTotalPension);
