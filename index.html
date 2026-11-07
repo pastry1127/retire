@@ -350,7 +350,7 @@
     </div>
   </div>
 
-  <!-- 자산 입력 섹션 (원 단위 적용) -->
+  <!-- 자산 입력 섹션 (원 단위 적용, 연금보험 삭제) -->
   <div class="section-card">
     <div class="section-title">💼 1. 보유 계좌별 자산 (원 단위)</div>
     <div class="input-grid">
@@ -370,18 +370,14 @@
         <label for="accIrp">IRP 퇴직연금</label>
         <input type="text" id="accIrp" value="0" oninput="formatAssetInput(this)">
       </div>
-      <div class="input-group">
-        <label for="accAnnuity">연금보험</label>
-        <input type="text" id="accAnnuity" value="0" oninput="formatAssetInput(this)">
-      </div>
-      <div class="input-group">
+      <div class="input-group full-width">
         <label for="accOverseas">해외계좌</label>
         <input type="text" id="accOverseas" value="0" oninput="formatAssetInput(this)">
       </div>
     </div>
   </div>
 
-  <!-- 조건 설정 섹션 -->
+  <!-- 조건 설정 섹션 (연금보험 개시연령 및 월수령액 추가) -->
   <div class="section-card">
     <div class="section-title">⚙️ 2. 연금 및 인출/수익률 설정</div>
     <div class="input-grid">
@@ -396,6 +392,14 @@
       <div class="input-group">
         <label for="pensionMonthly">국민연금 월 수령액(만)</label>
         <input type="text" id="pensionMonthly" value="110" oninput="formatAndRecalc(this)">
+      </div>
+      <div class="input-group">
+        <label for="annuityStartAge">연금보험 개시 연령</label>
+        <input type="number" id="annuityStartAge" value="58" min="50" max="75" onchange="recalculateAll()">
+      </div>
+      <div class="input-group">
+        <label for="annuityMonthly">연금보험 월 수령액(만)</label>
+        <input type="text" id="annuityMonthly" value="50" oninput="formatAndRecalc(this)">
       </div>
       <div class="input-group">
         <label for="retireAge">은퇴 시점 연령(세)</label>
@@ -434,7 +438,7 @@
     <div class="chart-legend-grid">
       <div class="legend-item"><div class="legend-dot" style="background: var(--primary);"></div><span>총 자산 궤적</span></div>
       <div class="legend-item"><div class="legend-dot" style="background: var(--accent-orange);"></div><span>순 인출액</span></div>
-      <div class="legend-item"><div class="legend-dot" style="background: var(--accent-green);"></div><span>국민연금</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background: var(--accent-green);"></div><span>총 연금수령액</span></div>
       <div class="legend-item"><div class="legend-box" style="background: rgba(236, 72, 153, 0.15); border: 1px dashed var(--accent-purple);"></div><span>크레바스</span></div>
     </div>
 
@@ -460,7 +464,6 @@
       <div class="legend-item"><div class="legend-dot" style="background: var(--accent-orange);"></div><span>ISA</span></div>
       <div class="legend-item"><div class="legend-dot" style="background: var(--accent-green);"></div><span>연금저축</span></div>
       <div class="legend-item"><div class="legend-dot" style="background: var(--accent-purple);"></div><span>IRP</span></div>
-      <div class="legend-item"><div class="legend-dot" style="background: var(--accent-teal);"></div><span>보험</span></div>
       <div class="legend-item"><div class="legend-dot" style="background: #eab308;"></div><span>해외</span></div>
     </div>
 
@@ -504,15 +507,12 @@
   async function fetchGoogleSheetsData() {
     if (!CSV_URL) return;
     try {
-      // 캐시 방지를 위해 timestamp 파라미터 추가
       const response = await fetch(CSV_URL + '&_t=' + new Date().getTime());
       const csvText = await response.text();
       
-      // CSV 줄바꿈 구분
       const lines = csvText.split(/\r?\n/);
       
       lines.forEach(line => {
-        // 따옴표 및 쉼표 파싱
         const parts = line.split(',').map(item => item.trim().replace(/^"|"$/g, ''));
         if (parts.length < 2) return;
         const key = parts[0];
@@ -521,8 +521,6 @@
 
         let rawNum = parseCommaInt(val);
         
-        // 구글 시트에 17,157,803 처럼 큰 원 단위 숫자로 적혀있으면 그대로 인식,
-        // 만약 17157 처럼 만 원 단위로 적혀있으면 10,000을 곱함
         let wonVal = rawNum;
         if (rawNum > 0 && rawNum < 1000000) {
           wonVal = rawNum * 10000;
@@ -532,9 +530,9 @@
         if (key.includes('중개형 ISA') || key.includes('ISA')) document.getElementById('accIsa').value = formatComma(wonVal);
         if (key.includes('연금저축')) document.getElementById('accPension').value = formatComma(wonVal);
         if (key.includes('IRP')) document.getElementById('accIrp').value = formatComma(wonVal);
-        if (key.includes('연금보험')) document.getElementById('accAnnuity').value = formatComma(wonVal);
         if (key.includes('해외계좌')) document.getElementById('accOverseas').value = formatComma(wonVal);
         if (key.includes('국민연금')) document.getElementById('pensionMonthly').value = formatComma(rawNum);
+        if (key.includes('연금보험')) document.getElementById('annuityMonthly').value = formatComma(rawNum);
       });
 
       recalculateAll();
@@ -557,7 +555,7 @@
   }
 
   function getTotalAssetWon() {
-    return ['accGeneral', 'accIsa', 'accPension', 'accIrp', 'accAnnuity', 'accOverseas']
+    return ['accGeneral', 'accIsa', 'accPension', 'accIrp', 'accOverseas']
       .reduce((sum, id) => sum + parseCommaInt(document.getElementById(id).value), 0);
   }
 
@@ -630,17 +628,21 @@
     const accIsa = parseCommaInt(document.getElementById('accIsa').value);
     const accPension = parseCommaInt(document.getElementById('accPension').value);
     const accIrp = parseCommaInt(document.getElementById('accIrp').value);
-    const accAnnuity = parseCommaInt(document.getElementById('accAnnuity').value);
     const accOverseas = parseCommaInt(document.getElementById('accOverseas').value);
 
-    const totalAssetWon = accGeneral + accIsa + accPension + accIrp + accAnnuity + accOverseas;
+    const totalAssetWon = accGeneral + accIsa + accPension + accIrp + accOverseas;
 
-    const retireAge = parseInt(document.getElementById('retireAge').value, 10) || 59;
+    const retireAge = parseInt(document.getElementById('retireAge').value, 10) || 56;
     const targetMonthlyDraw = parseCommaInt(document.getElementById('targetWithdrawal').value);
+    
     const pensionStartAge = parseInt(document.getElementById('pensionStartAge').value, 10) || 65;
     const pensionMonthly = parseCommaInt(document.getElementById('pensionMonthly').value);
+    
+    const annuityStartAge = parseInt(document.getElementById('annuityStartAge').value, 10) || 58;
+    const annuityMonthly = parseCommaInt(document.getElementById('annuityMonthly').value);
+
     const inflationRate = (parseFloat(document.getElementById('inflationRate').value) || 3.0) / 100;
-    const returnRate = (parseFloat(document.getElementById('returnRate').value) || 6.0) / 100;
+    const returnRate = (parseFloat(document.getElementById('returnRate').value) || 8.0) / 100;
 
     document.getElementById('kpiTotalAsset').textContent = formatAssetDisplay(totalAssetWon);
     document.getElementById('kpiMonthlyDraw').textContent = formatComma(targetMonthlyDraw) + ' 만 원';
@@ -653,7 +655,6 @@
     let subIsa = accIsa;
     let subPen = accPension;
     let subIrp = accIrp;
-    let subAnn = accAnnuity;
     let subOvs = accOverseas;
 
     const baseYear = 2040 - 65;
@@ -663,32 +664,40 @@
     for (let i = 0; i <= (95 - retireAge); i++) {
       const age = retireAge + i;
       const year = baseYear + age;
-      const totalSub = subGen + subIsa + subPen + subIrp + subAnn + subOvs;
+      const totalSub = subGen + subIsa + subPen + subIrp + subOvs;
 
       const currentAnnualNeed = annualDrawInitial * Math.pow(1 + inflationRate, i);
-      const annualPension = (age >= pensionStartAge) ? (pensionMonthly * 10000 * 12 * Math.pow(1 + inflationRate, Math.max(0, age - pensionStartAge))) : 0;
-      const netWithdrawal = Math.max(0, currentAnnualNeed - annualPension);
+
+      // 국민연금 (개시연령 이후 반영 및 물가상승률 반영)
+      const annualNatPension = (age >= pensionStartAge) ? (pensionMonthly * 10000 * 12 * Math.pow(1 + inflationRate, Math.max(0, age - pensionStartAge))) : 0;
+      
+      // 연금보험 (개시연령 이후 반영 및 물가상승률 반영)
+      const annualPrivAnnuity = (age >= annuityStartAge) ? (annuityMonthly * 10000 * 12 * Math.pow(1 + inflationRate, Math.max(0, age - annuityStartAge))) : 0;
+
+      const annualTotalPension = annualNatPension + annualPrivAnnuity;
+      const netWithdrawal = Math.max(0, currentAnnualNeed - annualTotalPension);
 
       if (i > 0 && totalSub > 0) {
         subGen = Math.max(0, (subGen - netWithdrawal * (subGen / totalSub)) * (1 + returnRate));
         subIsa = Math.max(0, (subIsa - netWithdrawal * (subIsa / totalSub)) * (1 + returnRate));
         subPen = Math.max(0, (subPen - netWithdrawal * (subPen / totalSub)) * (1 + returnRate));
         subIrp = Math.max(0, (subIrp - netWithdrawal * (subIrp / totalSub)) * (1 + returnRate));
-        subAnn = Math.max(0, (subAnn - netWithdrawal * (subAnn / totalSub)) * (1 + returnRate));
         subOvs = Math.max(0, (subOvs - netWithdrawal * (subOvs / totalSub)) * (1 + returnRate));
       }
 
-      const calculatedTotal = subGen + subIsa + subPen + subIrp + subAnn + subOvs;
+      const calculatedTotal = subGen + subIsa + subPen + subIrp + subOvs;
       if (calculatedTotal <= 0 && depletionAge === null) depletionAge = age;
 
       dataPoints.push({
         age, year,
         balance: calculatedTotal,
-        gen: subGen, isa: subIsa, pen: subPen, irp: subIrp, ann: subAnn, ovs: subOvs,
+        gen: subGen, isa: subIsa, pen: subPen, irp: subIrp, ovs: subOvs,
         annualNeed: Math.round(currentAnnualNeed / 120000),
-        pensionMonthly: Math.round(annualPension / 120000),
+        pensionMonthly: Math.round(annualTotalPension / 120000),
+        natPensionMonthly: Math.round(annualNatPension / 120000),
+        privAnnuityMonthly: Math.round(annualPrivAnnuity / 120000),
         netWithdrawalAnnual: Math.round(netWithdrawal / 10000),
-        annualPensionTotal: Math.round(annualPension / 10000)
+        annualPensionTotal: Math.round(annualTotalPension / 10000)
       });
     }
 
@@ -704,7 +713,7 @@
 
     renderAdvancedChart(dataPoints, retireAge, pensionStartAge);
     renderStackedBarChart(dataPoints, pensionStartAge);
-    updateSummaryText(totalAssetWon, accGeneral, accIsa, accPension, accIrp, accAnnuity, accOverseas, targetMonthlyDraw, depletionAge);
+    updateSummaryText(totalAssetWon, accGeneral, accIsa, accPension, accIrp, accOverseas, targetMonthlyDraw, depletionAge);
   }
 
   function renderAdvancedChart(dataPoints, retireAge, pensionStartAge) {
@@ -840,7 +849,8 @@
         <strong style="color:#60a5fa;">${d.age}세 (${d.year}년)</strong><br/>
         잔여 자산: <b style="color:#ffffff;">${formatAssetDisplay(d.balance)}</b><br/>
         총 생활비(월): ${formatComma(d.annualNeed)} 만 원<br/>
-        국민연금(월): <span style="color:#10b981;">${formatComma(d.pensionMonthly)} 만 원</span>
+        총 연금수령(월): <span style="color:#10b981;">${formatComma(d.pensionMonthly)} 만 원</span><br/>
+        <span style="font-size:0.75rem; color:#94a3b8;">(국민:${formatComma(d.natPensionMonthly)}만 | 보험:${formatComma(d.privAnnuityMonthly)}만)</span>
       `;
     };
 
@@ -903,7 +913,6 @@
       const hIsa = (d.isa / maxBal) * (height - paddingTop - paddingBottom);
       const hPen = (d.pen / maxBal) * (height - paddingTop - paddingBottom);
       const hIrp = (d.irp / maxBal) * (height - paddingTop - paddingBottom);
-      const hAnn = (d.ann / maxBal) * (height - paddingTop - paddingBottom);
       const hOvs = (d.ovs / maxBal) * (height - paddingTop - paddingBottom);
 
       let currentY = height - paddingBottom;
@@ -921,8 +930,7 @@
       const r2 = createRect(hIsa, '#f97316'); if(r2) group.appendChild(r2);
       const r3 = createRect(hPen, '#10b981'); if(r3) group.appendChild(r3);
       const r4 = createRect(hIrp, '#ec4899'); if(r4) group.appendChild(r4);
-      const r5 = createRect(hAnn, '#14b8a6'); if(r5) group.appendChild(r5);
-      const r6 = createRect(hOvs, '#eab308'); if(r6) group.appendChild(r6);
+      const r5 = createRect(hOvs, '#eab308'); if(r5) group.appendChild(r5);
       svg.appendChild(group);
 
       if (i % 5 === 0 || d.age === pensionStartAge) {
@@ -961,7 +969,7 @@
         <strong style="color:#60a5fa;">${d.age}세 (${d.year}년)</strong><br/>
         일반: ${formatAssetDisplay(d.gen)} | ISA: ${formatAssetDisplay(d.isa)}<br/>
         연금저축: ${formatAssetDisplay(d.pen)} | IRP: ${formatAssetDisplay(d.irp)}<br/>
-        보험: ${formatAssetDisplay(d.ann)} | 해외: ${formatAssetDisplay(d.ovs)}<br/>
+        해외: ${formatAssetDisplay(d.ovs)}<br/>
         <b>총합: <span style="color:#10b981;">${formatAssetDisplay(d.balance)}</span></b>
       `;
     };
@@ -973,9 +981,9 @@
     container.onmouseleave = () => { barLocked = false; tooltip.style.opacity = '0'; };
   }
 
-  function updateSummaryText(total, gen, isa, pen, irp, ann, ovs, draw, dep) {
+  function updateSummaryText(total, gen, isa, pen, irp, ovs, draw, dep) {
     const text = `[은퇴 자산 인출 및 크레바스 방어 시뮬레이션 결과]\n` +
-      `■ 총 자산: ${formatAssetDisplay(total)} (일반:${formatAssetDisplay(gen)}|ISA:${formatAssetDisplay(isa)}|연금:${formatAssetDisplay(pen)}|IRP:${formatAssetDisplay(irp)}|보험:${formatAssetDisplay(ann)}|해외:${formatAssetDisplay(ovs)})\n` +
+      `■ 총 자산: ${formatAssetDisplay(total)} (일반:${formatAssetDisplay(gen)}|ISA:${formatAssetDisplay(isa)}|연금:${formatAssetDisplay(pen)}|IRP:${formatAssetDisplay(irp)}|해외:${formatAssetDisplay(ovs)})\n` +
       `■ 월 인출 희망액: ${formatComma(draw)}만 원\n` +
       `■ 고갈 예상: ${dep !== null ? dep + '세 고갈 위험' : '100세 이상 안정적 유지'}`;
     document.getElementById('copySummaryBox').value = text;
@@ -990,7 +998,7 @@
 
   function copyTableForGoogleDocs() {
     if (!latestDataPoints || latestDataPoints.length === 0) return;
-    let tsv = "나이\t연도\t총자산(원)\t월생활비(만)\t국민연금(만)\t순인출(만)\n";
+    let tsv = "나이\t연도\t총자산(원)\t월생활비(만)\t총연금(만)\t순인출(만)\n";
     latestDataPoints.forEach(d => {
       tsv += `${d.age}\t${d.year}\t${d.balance}\t${d.annualNeed}\t${d.pensionMonthly}\t${d.netWithdrawalAnnual}\n`;
     });
