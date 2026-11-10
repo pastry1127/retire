@@ -350,13 +350,17 @@
     </div>
   </div>
 
-  <!-- 자산 입력 섹션 (원 단위 적용, 연금보험 삭제) -->
+  <!-- 자산 입력 섹션 (예금/비상금 항목 추가 반영) -->
   <div class="section-card">
     <div class="section-title">💼 1. 보유 계좌별 자산 (원 단위)</div>
     <div class="input-grid">
       <div class="input-group">
         <label for="accGeneral">일반계좌/CMA</label>
         <input type="text" id="accGeneral" value="0" oninput="formatAssetInput(this)">
+      </div>
+      <div class="input-group">
+        <label for="accDeposit">예금 (비상금)</label>
+        <input type="text" id="accDeposit" value="0" oninput="formatAssetInput(this)">
       </div>
       <div class="input-group">
         <label for="accIsa">중개형 ISA</label>
@@ -370,14 +374,14 @@
         <label for="accIrp">IRP 퇴직연금</label>
         <input type="text" id="accIrp" value="0" oninput="formatAssetInput(this)">
       </div>
-      <div class="input-group full-width">
+      <div class="input-group">
         <label for="accOverseas">해외계좌</label>
         <input type="text" id="accOverseas" value="0" oninput="formatAssetInput(this)">
       </div>
     </div>
   </div>
 
-  <!-- 조건 설정 섹션 (연금보험 개시연령 및 월수령액 추가) -->
+  <!-- 조건 설정 섹션 -->
   <div class="section-card">
     <div class="section-title">⚙️ 2. 연금 및 인출/수익률 설정</div>
     <div class="input-grid">
@@ -448,7 +452,7 @@
     </div>
   </div>
 
-  <!-- 2번 스택 바 차트 -->
+  <!-- 2번 스택 바 차트 (예금 항목 범례 추가) -->
   <div class="section-card">
     <div class="chart-header">
       <div class="section-title" style="margin-bottom:0;">
@@ -461,6 +465,7 @@
 
     <div class="chart-legend-grid">
       <div class="legend-item"><div class="legend-dot" style="background: var(--primary);"></div><span>일반</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background: var(--accent-teal);"></div><span>예금(비상금)</span></div>
       <div class="legend-item"><div class="legend-dot" style="background: var(--accent-orange);"></div><span>ISA</span></div>
       <div class="legend-item"><div class="legend-dot" style="background: var(--accent-green);"></div><span>연금저축</span></div>
       <div class="legend-item"><div class="legend-dot" style="background: var(--accent-purple);"></div><span>IRP</span></div>
@@ -526,7 +531,8 @@
           wonVal = rawNum * 10000;
         }
 
-        if (key.includes('일반계좌')) document.getElementById('accGeneral').value = formatComma(wonVal);
+        if (key.includes('일반계좌') || key.includes('CMA')) document.getElementById('accGeneral').value = formatComma(wonVal);
+        if (key.includes('예금') || key.includes('비상금')) document.getElementById('accDeposit').value = formatComma(wonVal);
         if (key.includes('중개형 ISA') || key.includes('ISA')) document.getElementById('accIsa').value = formatComma(wonVal);
         if (key.includes('연금저축')) document.getElementById('accPension').value = formatComma(wonVal);
         if (key.includes('IRP')) document.getElementById('accIrp').value = formatComma(wonVal);
@@ -555,7 +561,7 @@
   }
 
   function getTotalAssetWon() {
-    return ['accGeneral', 'accIsa', 'accPension', 'accIrp', 'accOverseas']
+    return ['accGeneral', 'accDeposit', 'accIsa', 'accPension', 'accIrp', 'accOverseas']
       .reduce((sum, id) => sum + parseCommaInt(document.getElementById(id).value), 0);
   }
 
@@ -625,12 +631,13 @@
 
   function recalculateAll() {
     const accGeneral = parseCommaInt(document.getElementById('accGeneral').value);
+    const accDeposit = parseCommaInt(document.getElementById('accDeposit').value);
     const accIsa = parseCommaInt(document.getElementById('accIsa').value);
     const accPension = parseCommaInt(document.getElementById('accPension').value);
     const accIrp = parseCommaInt(document.getElementById('accIrp').value);
     const accOverseas = parseCommaInt(document.getElementById('accOverseas').value);
 
-    const totalAssetWon = accGeneral + accIsa + accPension + accIrp + accOverseas;
+    const totalAssetWon = accGeneral + accDeposit + accIsa + accPension + accIrp + accOverseas;
 
     const retireAge = parseInt(document.getElementById('retireAge').value, 10) || 56;
     const targetMonthlyDraw = parseCommaInt(document.getElementById('targetWithdrawal').value);
@@ -638,10 +645,10 @@
     const pensionStartAge = parseInt(document.getElementById('pensionStartAge').value, 10) || 65;
     const pensionMonthly = parseCommaInt(document.getElementById('pensionMonthly').value);
     
-    const annuityStartAge = parseInt(document.getElementById('annuityStartAge').value, 10) || 58;
+    const annuityStartAge = parseInt(document.getElementById('annuityStartAge').value, 10) || 60;
     const annuityMonthly = parseCommaInt(document.getElementById('annuityMonthly').value);
 
-    const inflationRate = (parseFloat(document.getElementById('inflationRate').value) || 3.0) / 100;
+    const inflationRate = (parseFloat(document.getElementById('inflationRate').value) || 2.5) / 100;
     const returnRate = (parseFloat(document.getElementById('returnRate').value) || 8.0) / 100;
 
     document.getElementById('kpiTotalAsset').textContent = formatAssetDisplay(totalAssetWon);
@@ -652,6 +659,7 @@
     document.getElementById('kpiDrawRate').textContent = initialDrawRate + ' %';
 
     let subGen = accGeneral;
+    let subDep = accDeposit;
     let subIsa = accIsa;
     let subPen = accPension;
     let subIrp = accIrp;
@@ -664,7 +672,7 @@
     for (let i = 0; i <= (95 - retireAge); i++) {
       const age = retireAge + i;
       const year = baseYear + age;
-      const totalSub = subGen + subIsa + subPen + subIrp + subOvs;
+      const totalSub = subGen + subDep + subIsa + subPen + subIrp + subOvs;
 
       const currentAnnualNeed = annualDrawInitial * Math.pow(1 + inflationRate, i);
 
@@ -679,19 +687,20 @@
 
       if (i > 0 && totalSub > 0) {
         subGen = Math.max(0, (subGen - netWithdrawal * (subGen / totalSub)) * (1 + returnRate));
+        subDep = Math.max(0, (subDep - netWithdrawal * (subDep / totalSub)) * (1 + returnRate));
         subIsa = Math.max(0, (subIsa - netWithdrawal * (subIsa / totalSub)) * (1 + returnRate));
         subPen = Math.max(0, (subPen - netWithdrawal * (subPen / totalSub)) * (1 + returnRate));
         subIrp = Math.max(0, (subIrp - netWithdrawal * (subIrp / totalSub)) * (1 + returnRate));
         subOvs = Math.max(0, (subOvs - netWithdrawal * (subOvs / totalSub)) * (1 + returnRate));
       }
 
-      const calculatedTotal = subGen + subIsa + subPen + subIrp + subOvs;
+      const calculatedTotal = subGen + subDep + subIsa + subPen + subIrp + subOvs;
       if (calculatedTotal <= 0 && depletionAge === null) depletionAge = age;
 
       dataPoints.push({
         age, year,
         balance: calculatedTotal,
-        gen: subGen, isa: subIsa, pen: subPen, irp: subIrp, ovs: subOvs,
+        gen: subGen, dep: subDep, isa: subIsa, pen: subPen, irp: subIrp, ovs: subOvs,
         annualNeed: Math.round(currentAnnualNeed / 120000),
         pensionMonthly: Math.round(annualTotalPension / 120000),
         natPensionMonthly: Math.round(annualNatPension / 120000),
@@ -713,7 +722,7 @@
 
     renderAdvancedChart(dataPoints, retireAge, pensionStartAge);
     renderStackedBarChart(dataPoints, pensionStartAge);
-    updateSummaryText(totalAssetWon, accGeneral, accIsa, accPension, accIrp, accOverseas, targetMonthlyDraw, depletionAge);
+    updateSummaryText(totalAssetWon, accGeneral, accDeposit, accIsa, accPension, accIrp, accOverseas, targetMonthlyDraw, depletionAge);
   }
 
   function renderAdvancedChart(dataPoints, retireAge, pensionStartAge) {
@@ -910,6 +919,7 @@
     dataPoints.forEach((d, i) => {
       const x = getX(i) + 1;
       const hGen = (d.gen / maxBal) * (height - paddingTop - paddingBottom);
+      const hDep = (d.dep / maxBal) * (height - paddingTop - paddingBottom);
       const hIsa = (d.isa / maxBal) * (height - paddingTop - paddingBottom);
       const hPen = (d.pen / maxBal) * (height - paddingTop - paddingBottom);
       const hIrp = (d.irp / maxBal) * (height - paddingTop - paddingBottom);
@@ -927,10 +937,11 @@
 
       const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
       const r1 = createRect(hGen, '#3b82f6'); if(r1) group.appendChild(r1);
-      const r2 = createRect(hIsa, '#f97316'); if(r2) group.appendChild(r2);
-      const r3 = createRect(hPen, '#10b981'); if(r3) group.appendChild(r3);
-      const r4 = createRect(hIrp, '#ec4899'); if(r4) group.appendChild(r4);
-      const r5 = createRect(hOvs, '#eab308'); if(r5) group.appendChild(r5);
+      const r2 = createRect(hDep, '#14b8a6'); if(r2) group.appendChild(r2);
+      const r3 = createRect(hIsa, '#f97316'); if(r3) group.appendChild(r3);
+      const r4 = createRect(hPen, '#10b981'); if(r4) group.appendChild(r4);
+      const r5 = createRect(hIrp, '#ec4899'); if(r5) group.appendChild(r5);
+      const r6 = createRect(hOvs, '#eab308'); if(r6) group.appendChild(r6);
       svg.appendChild(group);
 
       if (i % 5 === 0 || d.age === pensionStartAge) {
@@ -967,9 +978,9 @@
       tooltip.style.top = tooltipY + 'px';
       tooltip.innerHTML = `
         <strong style="color:#60a5fa;">${d.age}세 (${d.year}년)</strong><br/>
-        일반: ${formatAssetDisplay(d.gen)} | ISA: ${formatAssetDisplay(d.isa)}<br/>
-        연금저축: ${formatAssetDisplay(d.pen)} | IRP: ${formatAssetDisplay(d.irp)}<br/>
-        해외: ${formatAssetDisplay(d.ovs)}<br/>
+        일반: ${formatAssetDisplay(d.gen)} | 예금: ${formatAssetDisplay(d.dep)}<br/>
+        ISA: ${formatAssetDisplay(d.isa)} | 연금: ${formatAssetDisplay(d.pen)}<br/>
+        IRP: ${formatAssetDisplay(d.irp)} | 해외: ${formatAssetDisplay(d.ovs)}<br/>
         <b>총합: <span style="color:#10b981;">${formatAssetDisplay(d.balance)}</span></b>
       `;
     };
@@ -981,9 +992,9 @@
     container.onmouseleave = () => { barLocked = false; tooltip.style.opacity = '0'; };
   }
 
-  function updateSummaryText(total, gen, isa, pen, irp, ovs, draw, dep) {
+  function updateSummaryText(total, gen, depAcc, isa, pen, irp, ovs, draw, dep) {
     const text = `[은퇴 자산 인출 및 크레바스 방어 시뮬레이션 결과]\n` +
-      `■ 총 자산: ${formatAssetDisplay(total)} (일반:${formatAssetDisplay(gen)}|ISA:${formatAssetDisplay(isa)}|연금:${formatAssetDisplay(pen)}|IRP:${formatAssetDisplay(irp)}|해외:${formatAssetDisplay(ovs)})\n` +
+      `■ 총 자산: ${formatAssetDisplay(total)} (일반:${formatAssetDisplay(gen)}|예금:${formatAssetDisplay(depAcc)}|ISA:${formatAssetDisplay(isa)}|연금:${formatAssetDisplay(pen)}|IRP:${formatAssetDisplay(irp)}|해외:${formatAssetDisplay(ovs)})\n` +
       `■ 월 인출 희망액: ${formatComma(draw)}만 원\n` +
       `■ 고갈 예상: ${dep !== null ? dep + '세 고갈 위험' : '100세 이상 안정적 유지'}`;
     document.getElementById('copySummaryBox').value = text;
