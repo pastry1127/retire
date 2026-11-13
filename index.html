@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>은퇴 자산 인출 시뮬레이터</title>
+  <title>은퇴 자산 인출 시뮬레이터 (비례 모드 정밀 수정)</title>
   <style>
     :root {
       --bg-color: #0f172a;
@@ -404,7 +404,7 @@
 <div class="container">
   <!-- 헤더 & 모드 토글 -->
   <div class="header">
-    <h1>은퇴 자산 인출 시뮬레이터</h1>
+    <h1>은퇴 자산 인출 시뮬레이터 (비례 모드 정밀 수정)</h1>
     <div class="theme-toggle" onclick="toggleTheme()">
       <span id="themeLabel">☀️ 라이트모드</span>
     </div>
@@ -473,7 +473,7 @@
     </div>
   </div>
 
-  <!-- 조건 설정 섹션 (연금 분리과세 한도 탭 맨 마지막) -->
+  <!-- 조건 설정 섹션 -->
   <div class="section-card">
     <div class="section-title">⚙️ 2. 연금 및 인출/수익률 설정</div>
     <div class="input-grid">
@@ -529,7 +529,7 @@
 
   <!-- 인출 방식 및 순서/비율 설정 섹션 -->
   <div class="section-card">
-    <div class="section-title">🔄 3. 인출 방식 및 계좌별 순서/비율 설정 (기본: ISA 50% / 연금저축 50%)</div>
+    <div class="section-title">🔄 3. 인출 방식 및 계좌별 순서/비율 설정</div>
     <div class="mode-select-bar">
       <button class="mode-btn" id="modeSeqBtn" onclick="setWithdrawalMode('sequential')">📌 순차 인출 모드 (우선순위)</button>
       <button class="mode-btn active" id="modeRatioBtn" onclick="setWithdrawalMode('ratio')">⚖️ 동시 비례 인출 모드 (%)</button>
@@ -906,28 +906,10 @@
 
         const deductFromAccountDirect = (key, grossAmt) => {
           if (grossAmt <= 0) return 0;
-          let actualGross = 0;
+          let actualGross = grossAmt;
           let netDeducted = 0;
 
-          if (key === 'dep') {
-            actualGross = Math.min(subDep, grossAmt);
-            subDep -= actualGross;
-            netDeducted = actualGross;
-          } else if (key === 'gen') {
-            actualGross = Math.min(subGen, grossAmt);
-            subGen -= actualGross;
-            netDeducted = actualGross;
-          } else if (key === 'ovs') {
-            actualGross = Math.min(subOvs, grossAmt);
-            let res = calculateNetWithdrawal('ovs', actualGross, pensionLimitWon);
-            subOvs -= actualGross;
-            netDeducted = res.net;
-          } else if (key === 'isa') {
-            actualGross = Math.min(subIsa, grossAmt);
-            let res = calculateNetWithdrawal('isa', actualGross, pensionLimitWon);
-            subIsa -= actualGross;
-            netDeducted = res.net;
-          } else if (key === 'pen') {
+          if (key === 'pen') {
             actualGross = Math.min(subPen, grossAmt);
             annualPensionGrossCheck += actualGross;
             let res = calculateNetWithdrawal('pen', actualGross, pensionLimitWon);
@@ -939,12 +921,30 @@
             let res = calculateNetWithdrawal('irp', actualGross, pensionLimitWon);
             subIrp -= actualGross;
             netDeducted = res.net;
+          } else if (key === 'isa') {
+            actualGross = Math.min(subIsa, grossAmt);
+            let res = calculateNetWithdrawal('isa', actualGross, pensionLimitWon);
+            subIsa -= actualGross;
+            netDeducted = res.net;
+          } else if (key === 'ovs') {
+            actualGross = Math.min(subOvs, grossAmt);
+            let res = calculateNetWithdrawal('ovs', actualGross, pensionLimitWon);
+            subOvs -= actualGross;
+            netDeducted = res.net;
+          } else if (key === 'gen') {
+            actualGross = Math.min(subGen, grossAmt);
+            subGen -= actualGross;
+            netDeducted = actualGross;
+          } else if (key === 'dep') {
+            actualGross = Math.min(subDep, grossAmt);
+            subDep -= actualGross;
+            netDeducted = actualGross;
           }
           return netDeducted;
         };
 
         if (withdrawalMode === 'sequential') {
-          // 순차 인출 모드: 1순위 계좌부터 차례대로 완파
+          // 순차 인출 모드: 1순위 계좌부터 순서대로 완파
           for (let item of withdrawalOrder) {
             if (remainingNeed <= 0) break;
             let currentBal = 0;
@@ -956,20 +956,16 @@
             if (item.key === 'dep') currentBal = subDep;
 
             if (currentBal > 0) {
-              // 필요한 세후 금액을 맞추기 위해 역산 또는 반복 차감
-              let neededGross = remainingNeed; // 대략치로 시작
-              if (item.key === 'pen' || item.key === 'irp') {
-                neededGross = remainingNeed / 0.835; // 16.5% 세금 고려
-              } else if (item.key === 'isa') {
-                neededGross = remainingNeed / 0.95; 
-              } else if (item.key === 'ovs') {
-                neededGross = remainingNeed / 0.90;
-              }
+              let neededGross = remainingNeed;
+              if (item.key === 'pen' || item.key === 'irp') neededGross = remainingNeed / 0.835;
+              else if (item.key === 'isa') neededGross = remainingNeed / 0.95;
+              else if (item.key === 'ovs') neededGross = remainingNeed / 0.90;
+
               neededGross = Math.min(currentBal, neededGross);
               let netDec = deductFromAccountDirect(item.key, neededGross);
               remainingNeed -= netDec;
 
-              // 만약 아직 잔액이 남았고 세후 금액을 다 채우지 못했다면 한 번 더 차감
+              // 혹시 잔액이 남았으나 다 못 털었다면 한 번 더 정산
               if (remainingNeed > 0) {
                 let nextBal = 0;
                 if (item.key === 'pen') nextBal = subPen;
@@ -977,64 +973,71 @@
                 if (item.key === 'isa') nextBal = subIsa;
                 if (item.key === 'ovs') nextBal = subOvs;
                 if (item.key === 'gen') nextBal = subGen;
-                if (item.key === 'dep') nextBal = subDep;
-                if (nextBal > 0) {
-                  let netDec2 = deductFromAccountDirect(item.key, nextBal);
+                if (item.key === 'dep') nextBal = subDeposit; // fallback
+                // 실시간 잔액으로 즉시 보정
+                let realBal = (item.key==='pen'?subPen:item.key==='irp'?subIrp:item.key==='isa'?subIsa:item.key==='ovs'?subOvs:item.key==='gen'?subGen:subDep);
+                if (realBal > 0) {
+                  let netDec2 = deductFromAccountDirect(item.key, realBal);
                   remainingNeed -= netDec2;
                 }
               }
             }
           }
         } else {
-          // 동시 비례 인출 모드: 설정된 비율(%)대로 동시에 차감
-          let totalRatio = withdrawalOrder.reduce((sum, o) => sum + o.ratio, 0);
+          // ★ [동시 비례 인출 모드 정밀 수정] 설정된 비율(%)에 맞춰 각 계좌에서 동시에 정확히 비례 차감
+          let totalRatio = withdrawalOrder.reduce((sum, o) => sum + (o.ratio > 0 ? o.ratio : 0), 0);
           if (totalRatio <= 0) totalRatio = 1;
 
-          // 각 계좌별 잔액 총합 체크
-          let totalAvailableBal = subPen + subIrp + subIsa + subOvs + subGen + subDep;
-          if (totalAvailableBal > 0) {
-            let safetyCounter = 0;
-            while (remainingNeed > 100 && safetyCounter < 5) {
-              safetyCounter++;
-              let partialNeed = remainingNeed;
-              
-              withdrawalOrder.forEach(item => {
-                if (remainingNeed <= 0 || item.ratio <= 0) return;
-                let shareRatio = item.ratio / totalRatio;
-                let targetGross = (partialNeed * shareRatio);
-                
-                let currentBal = 0;
-                if (item.key === 'pen') currentBal = subPen;
-                if (item.key === 'irp') currentBal = subIrp;
-                if (item.key === 'isa') currentBal = subIsa;
-                if (item.key === 'ovs') currentBal = subOvs;
-                if (item.key === 'gen') currentBal = subGen;
-                if (item.key === 'dep') currentBal = subDep;
+          // 1단계: 각 계좌별로 설정된 비율에 따라 세후 인출 목표액 배분 및 차감
+          withdrawalOrder.forEach(item => {
+            if (remainingNeed <= 0 || item.ratio <= 0) return;
+            let shareRatio = item.ratio / totalRatio;
+            let targetNetShare = netWithdrawal * shareRatio;
 
-                if (currentBal > 0) {
-                  let takeGross = Math.min(currentBal, targetGross);
-                  let netDec = deductFromAccountDirect(item.key, takeGross);
-                  remainingNeed -= netDec;
-                }
-              });
+            let currentBal = 0;
+            if (item.key === 'pen') currentBal = subPen;
+            if (item.key === 'irp') currentBal = subIrp;
+            if (item.key === 'isa') currentBal = subIsa;
+            if (item.key === 'ovs') currentBal = subOvs;
+            if (item.key === 'gen') currentBal = subGen;
+            if (item.key === 'dep') currentBal = subDep;
+
+            if (currentBal > 0) {
+              let neededGross = targetNetShare;
+              if (item.key === 'pen' || item.key === 'irp') neededGross = targetNetShare / 0.835;
+              else if (item.key === 'isa') neededGross = targetNetShare / 0.95;
+              else if (item.key === 'ovs') neededGross = targetNetShare / 0.90;
+
+              let takeGross = Math.min(currentBal, neededGross);
+              let netDec = deductFromAccountDirect(item.key, takeGross);
+              remainingNeed -= netDec;
             }
+          });
 
-            // 아주 적은 잔여 오차나 비율 배분 후 남은 금액은 잔액 남은 계좌에서 마저 소진
-            if (remainingNeed > 0) {
-              for (let item of withdrawalOrder) {
-                if (remainingNeed <= 0) break;
-                let currentBal = 0;
-                if (item.key === 'pen') currentBal = subPen;
-                if (item.key === 'irp') currentBal = subIrp;
-                if (item.key === 'isa') currentBal = subIsa;
-                if (item.key === 'ovs') currentBal = subOvs;
-                if (item.key === 'gen') currentBal = subGen;
-                if (item.key === 'dep') currentBal = subDep;
+          // 2단계: 비율 배분 후 반올림 오차나 잔액 부족으로 남은 미세 잔여액은 비율이 0이 아니었던 계좌 중 잔액이 남은 곳에서 공평하게 마저 소진
+          if (remainingNeed > 100) {
+            let activeRatioItems = withdrawalOrder.filter(o => o.ratio > 0);
+            if (activeRatioItems.length === 0) activeRatioItems = withdrawalOrder; // 모두 0%면 전체 대상
 
-                if (currentBal > 0) {
-                  let netDec = deductFromAccountDirect(item.key, currentBal);
-                  remainingNeed -= netDec;
-                }
+            for (let item of activeRatioItems) {
+              if (remainingNeed <= 0) break;
+              let currentBal = (item.key==='pen'?subPen:item.key==='irp'?subIrp:item.key==='isa'?subIsa:item.key==='ovs'?subOvs:item.key==='gen'?subGen:subDep);
+              if (currentBal > 0) {
+                let takeGross = Math.min(currentBal, remainingNeed * (item.key==='pen'||item.key==='irp'? 1.2 : 1.0));
+                let netDec = deductFromAccountDirect(item.key, takeGross);
+                remainingNeed -= netDec;
+              }
+            }
+          }
+
+          // 3단계: 그래도 남은 초미세 잔여액은 잔액이 있는 첫 번째 계좌에서 클리어
+          if (remainingNeed > 0) {
+            for (let item of withdrawalOrder) {
+              if (remainingNeed <= 0) break;
+              let currentBal = (item.key==='pen'?subPen:item.key==='irp'?subIrp:item.key==='isa'?subIsa:item.key==='ovs'?subOvs:item.key==='gen'?subGen:subDep);
+              if (currentBal > 0) {
+                let netDec = deductFromAccountDirect(item.key, currentBal);
+                remainingNeed -= netDec;
               }
             }
           }
