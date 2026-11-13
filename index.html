@@ -350,7 +350,7 @@
     </div>
   </div>
 
-  <!-- 자산 입력 섹션 (기존 탭/입력창 순서 유지) -->
+  <!-- 자산 입력 섹션 -->
   <div class="section-card">
     <div class="section-title">💼 1. 보유 계좌별 자산 (원 단위)</div>
     <div class="input-grid">
@@ -452,7 +452,7 @@
     </div>
   </div>
 
-  <!-- 2번 스택 바 차트 (기존 색상 범례 순서 유지) -->
+  <!-- 2번 스택 바 차트 -->
   <div class="section-card">
     <div class="chart-header">
       <div class="section-title" style="margin-bottom:0;">
@@ -637,8 +637,7 @@
     const accDeposit = parseCommaInt(document.getElementById('accDeposit').value);
 
     const totalAssetWon = accPension + accIrp + accIsa + accOverseas + accGeneral + accDeposit;
-    // 비과세·절세 연금 우선 재원(ISA + 연금저축 + IRP)
-    const pensionPriorityWon = accIsa + accPension + accIrp;
+    const safeAssetWon = accDeposit + accGeneral;
 
     const retireAge = parseInt(document.getElementById('retireAge').value, 10) || 56;
     const targetMonthlyDraw = parseCommaInt(document.getElementById('targetWithdrawal').value);
@@ -670,7 +669,6 @@
     let depletionAge = null;
     const dataPoints = [];
 
-    // 크레바스 구간(은퇴 ~ 국민연금 개시 전) 누적 필요자금
     let crevasseTotalNeed = 0;
 
     for (let i = 0; i <= (100 - retireAge); i++) {
@@ -690,7 +688,7 @@
       }
 
       if (i > 0) {
-        // 1. 자산별 투자 수익 적용 (자산 증식)
+        // 1. 자산별 투자 수익 적용
         subPen = Math.max(0, subPen * (1 + returnRate));
         subIrp = Math.max(0, subIrp * (1 + returnRate));
         subIsa = Math.max(0, subIsa * (1 + returnRate));
@@ -698,15 +696,15 @@
         subGen = Math.max(0, subGen * (1 + returnRate));
         subDep = Math.max(0, subDep * (1 + returnRate));
 
-        // 2. 재성님 맞춤 절세 인출 순서: ISA -> 연금저축(미공제 원금 우선) -> IRP -> 예금 -> 일반 -> 해외(비상용 최후 보존)
+        // 2. 이전 버전의 현실적 절세 인출 순서: 예금 -> 일반 -> 해외 -> ISA -> 연금저축 -> IRP
         let remainingNeed = netWithdrawal;
         
-        let dIsa = Math.min(subIsa, remainingNeed); subIsa -= dIsa; remainingNeed -= dIsa;
-        let dPen = Math.min(subPen, remainingNeed); subPen -= dPen; remainingNeed -= dPen;
-        let dIrp = Math.min(subIrp, remainingNeed); subIrp -= dIrp; remainingNeed -= dIrp;
         let dDep = Math.min(subDep, remainingNeed); subDep -= dDep; remainingNeed -= dDep;
         let dGen = Math.min(subGen, remainingNeed); subGen -= dGen; remainingNeed -= dGen;
         let dOvs = Math.min(subOvs, remainingNeed); subOvs -= dOvs; remainingNeed -= dOvs;
+        let dIsa = Math.min(subIsa, remainingNeed); subIsa -= dIsa; remainingNeed -= dIsa;
+        let dPen = Math.min(subPen, remainingNeed); subPen -= dPen; remainingNeed -= dPen;
+        let dIrp = Math.min(subIrp, remainingNeed); subIrp -= dIrp; remainingNeed -= dIrp;
       }
 
       const calculatedTotal = subPen + subIrp + subIsa + subOvs + subGen + subDep;
@@ -737,7 +735,7 @@
 
     renderAdvancedChart(dataPoints, retireAge, pensionStartAge, inflationRate);
     renderStackedBarChart(dataPoints, pensionStartAge, inflationRate);
-    updateSummaryText(totalAssetWon, accPension, accIrp, accIsa, accOverseas, accGeneral, accDeposit, targetMonthlyDraw, depletionAge, crevasseTotalNeed, pensionPriorityWon);
+    updateSummaryText(totalAssetWon, accPension, accIrp, accIsa, accOverseas, accGeneral, accDeposit, targetMonthlyDraw, depletionAge, crevasseTotalNeed, safeAssetWon);
   }
 
   function renderAdvancedChart(dataPoints, retireAge, pensionStartAge, inflationRate) {
@@ -1008,12 +1006,12 @@
     container.onmouseleave = () => { barLocked = false; tooltip.style.opacity = '0'; };
   }
 
-  function updateSummaryText(total, pen, irp, isa, ovs, gen, depAcc, draw, dep, crevasseNeed, pensionPriority) {
-    const coverageRatio = crevasseNeed > 0 ? ((pensionPriority / crevasseNeed) * 100).toFixed(0) : 100;
+  function updateSummaryText(total, pen, irp, isa, ovs, gen, depAcc, draw, dep, crevasseNeed, safeAsset) {
+    const defenseRatio = crevasseNeed > 0 ? ((safeAsset / crevasseNeed) * 100).toFixed(0) : 0;
     const text = `[은퇴 자산 인출 및 크레바스 방어 플랜 요약]\n` +
       `■ 총 자산: ${formatAssetDisplay(total)} (연금:${formatAssetDisplay(pen)}|IRP:${formatAssetDisplay(irp)}|ISA:${formatAssetDisplay(isa)}|해외:${formatAssetDisplay(ovs)}|일반:${formatAssetDisplay(gen)}|예금:${formatAssetDisplay(depAcc)})\n` +
-      `■ 인출 순서: ISA → 연금저축(미공제 원금 우선) → IRP → 예금/일반 → 해외(비상용 보존)\n` +
-      `■ 월 인출 희망액: ${formatComma(draw)}만 원 | 크레바스 필요 누적액: ${formatAssetDisplay(crevasseNeed)} (연금·ISA 방어율: ${coverageRatio}%)\n` +
+      `■ 인출 순서: 예금 → 일반계좌 → 해외계좌 → ISA → 연금저축 → IRP\n` +
+      `■ 월 인출 희망액: ${formatComma(draw)}만 원 | 크레바스 필요 누적액: ${formatAssetDisplay(crevasseNeed)} (안전자산 방어율: ${defenseRatio}%)\n` +
       `■ 고갈 예상: ${dep !== null ? dep + '세 고갈 위험' : '100세 이상 안정적 유지 (안전)'}`;
     document.getElementById('copySummaryBox').value = text;
   }
