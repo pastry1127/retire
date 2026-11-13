@@ -802,38 +802,67 @@
     onCustomRateChange();
   }
 
-  function calculateNetWithdrawal(accountKey, grossNeeded, limitWon) {
-    if (grossNeeded <= 0) return { net: 0, tax: 0 };
-    
+  // 세전 출금액(gross) -> 실제 세후 수령액(net) 및 세금(tax) 계산
+  function calculateNetWithdrawal(accountKey, grossAmt, limitWon, prevPensionGross) {
+    if (grossAmt <= 0) return { net: 0, tax: 0 };
     let tax = 0;
-    let net = grossNeeded;
 
     if (accountKey === 'isa') {
-      let estimatedGain = grossNeeded * 0.4;
+      // 수익 비중 40% 가정, 비과세 200만 원 초과분 9.9% 분리과세
+      let estimatedGain = grossAmt * 0.4;
       let taxableGain = Math.max(0, estimatedGain - 2000000);
       tax = taxableGain * 0.099;
-      net = grossNeeded - tax;
     } 
     else if (accountKey === 'pen' || accountKey === 'irp') {
-      if (grossNeeded > limitWon) {
-        tax = grossNeeded * 0.165;
+      // 당해 연도 연금저축+IRP 누적 인출액 기준으로 분리과세 한도 초과 여부 판정
+      let totalPensionAfter = prevPensionGross + grossAmt;
+      if (prevPensionGross >= limitWon) {
+        tax = grossAmt * 0.165;
+      } else if (totalPensionAfter <= limitWon) {
+        tax = grossAmt * 0.055;
       } else {
-        tax = grossNeeded * 0.055;
+        let withinLimit = limitWon - prevPensionGross;
+        let overLimit = totalPensionAfter - limitWon;
+        tax = (withinLimit * 0.055) + (overLimit * 0.165);
       }
-      net = grossNeeded - tax;
     }
     else if (accountKey === 'ovs') {
-      let estimatedGain = grossNeeded * 0.5;
+      // 수익 비중 50% 가정, 기본공제 250만 원 초과분 22% 양도세
+      let estimatedGain = grossAmt * 0.5;
       let taxableGain = Math.max(0, estimatedGain - 2500000);
       tax = taxableGain * 0.22;
-      net = grossNeeded - tax;
-    }
-    else {
-      tax = 0;
-      net = grossNeeded;
     }
 
-    return { net: net, tax: tax };
+    return { net: Math.max(0, grossAmt - tax), tax: tax };
+  }
+
+  // 목표 세후 금액(targetNet)을 손에 쥐기 위해 계좌에서 빼야 할 정확한 세전 금액(grossNeeded) 역산
+  function calculateGrossNeeded(accountKey, targetNet, limitWon, prevPensionGross) {
+    if (targetNet <= 0) return 0;
+
+    if (accountKey === 'isa') {
+      // gain = 0.4 * gross. 비과세 한도 200만 원까지는 gross = 500만 원(세후 500만 원)
+      if (targetNet <= 5000000) return targetNet;
+      // targetNet = gross - 0.099 * (0.4 * gross - 2000000) = 0.9604 * gross + 198000
+      return (targetNet - 198000) / 0.9604;
+    } 
+    else if (accountKey === 'pen' || accountKey === 'irp') {
+      let remLimit = Math.max(0, limitWon - prevPensionGross);
+      let maxNetWithinLimit = remLimit * 0.945; // 5.5% 세율 구간 최대 세후액
+      if (targetNet <= maxNetWithinLimit) {
+        return targetNet / 0.945;
+      } else {
+        let excessNet = targetNet - maxNetWithinLimit;
+        return remLimit + (excessNet / 0.835); // 초과분만 16.5% 역산
+      }
+    } 
+    else if (accountKey === 'ovs') {
+      // gain = 0.5 * gross. 비과세 한도 250만 원까지는 gross = 500만 원(세후 500만 원)
+      if (targetNet <= 5000000) return targetNet;
+      // targetNet = gross - 0.22 * (0.5 * gross - 2500000) = 0.89 * gross + 550000
+      return (targetNet - 550000) / 0.89;
+    }
+    return targetNet; // 일반계좌/예금은 세금 0 가정
   }
 
   function recalculateAll() {
@@ -920,89 +949,71 @@
           let actualGross = Math.min(currentBal, grossAmt);
           if (actualGross <= 0) return 0;
 
+          let res = calculateNetWithdrawal(key, actualGross, pensionLimitWon, annualPensionGrossCheck);
+
           if (key === 'pen') {
             subPen -= actualGross;
             annualPensionGrossCheck += actualGross;
-            return calculateNetWithdrawal('pen', actualGross, pensionLimitWon).net;
           } else if (key === 'irp') {
             subIrp -= actualGross;
             annualPensionGrossCheck += actualGross;
-            return calculateNetWithdrawal('irp', actualGross, pensionLimitWon).net;
           } else if (key === 'isa') {
             subIsa -= actualGross;
-            return calculateNetWithdrawal('isa', actualGross, pensionLimitWon).net;
           } else if (key === 'ovs') {
             subOvs -= actualGross;
-            return calculateNetWithdrawal('ovs', actualGross, pensionLimitWon).net;
           } else if (key === 'gen') {
             subGen -= actualGross;
-            return actualGross;
           } else if (key === 'dep') {
             subDep -= actualGross;
-            return actualGross;
           }
-          return 0;
+          return res.net;
         };
 
         if (withdrawalMode === 'sequential') {
           // 📌 순차 인출 모드
           for (let item of withdrawalOrder) {
-            if (remainingNeed <= 0) break;
+            if (remainingNeed <= 1) break;
             let currentBal = getAccountBalance(item.key);
             if (currentBal > 0) {
-              let neededGross = remainingNeed;
-              if (item.key === 'pen' || item.key === 'irp') neededGross = remainingNeed / 0.835;
-              else if (item.key === 'isa') neededGross = remainingNeed / 0.95;
-              else if (item.key === 'ovs') neededGross = remainingNeed / 0.90;
-
+              let neededGross = calculateGrossNeeded(item.key, remainingNeed, pensionLimitWon, annualPensionGrossCheck);
               let netDeducted = withdrawFromAccount(item.key, neededGross);
-              remainingNeed -= netDeducted;
+              remainingNeed = Math.max(0, remainingNeed - netDeducted);
             }
           }
         } else {
-          // ⚖️ [동시 비례 인출 모드 최종 개선]
-          // 잔액이 남아있는 계좌들만 대상으로 유효 비율을 실시간 재산정하여 비례 차감
-          let maxLoop = 5; // 무한 루프 방지용 최대 반복 안전장치
-          while (remainingNeed > 10 && maxLoop > 0) {
+          // ⚖️ 동시 비례 인출 모드 (정밀 역산 적용)
+          let maxLoop = 6;
+          while (remainingNeed > 1 && maxLoop > 0) {
             maxLoop--;
 
-            // 잔액이 남아있는 활성 비례 계좌 필터링
-            let activeItems = withdrawalOrder.filter(item => item.ratio > 0 && getAccountBalance(item.key) > 10);
-            
-            // 만약 비율이 설정된 계좌들이 모두 바닥났다면 잔액이 있는 아무 계좌나 동원
+            let activeItems = withdrawalOrder.filter(item => item.ratio > 0 && getAccountBalance(item.key) > 1);
             if (activeItems.length === 0) {
-              activeItems = withdrawalOrder.filter(item => getAccountBalance(item.key) > 10);
+              activeItems = withdrawalOrder.filter(item => getAccountBalance(item.key) > 1);
             }
-            if (activeItems.length === 0) break; // 인출할 자산이 완전히 고갈됨
+            if (activeItems.length === 0) break;
 
-            // 현재 활성 계좌들의 비율 합계 산출 (비율 재조정)
-            let activeTotalRatio = activeItems.reduce((sum, item) => sum + (withdrawalMode === 'ratio' ? item.ratio : 1), 0);
+            let activeTotalRatio = activeItems.reduce((sum, item) => sum + (item.ratio > 0 ? item.ratio : 1), 0);
             if (activeTotalRatio <= 0) activeTotalRatio = activeItems.length;
 
+            // 라운드 시작 시점의 남은 필요액을 기준으로 각 계좌별 목표 세후 몫 고정 배분
+            let roundNeed = remainingNeed;
             let extractedThisRound = 0;
 
             for (let item of activeItems) {
-              if (remainingNeed <= 0) break;
-              let itemShare = (withdrawalMode === 'ratio' ? item.ratio : 1) / activeTotalRatio;
-              let targetNetShare = remainingNeed * itemShare;
+              if (remainingNeed <= 1) break;
+              let itemShare = (item.ratio > 0 ? item.ratio : 1) / activeTotalRatio;
+              let targetNetShare = Math.min(remainingNeed, roundNeed * itemShare);
 
               let currentBal = getAccountBalance(item.key);
               if (currentBal <= 0) continue;
 
-              let neededGross = targetNetShare;
-              if (item.key === 'pen' || item.key === 'irp') neededGross = targetNetShare / 0.835;
-              else if (item.key === 'isa') neededGross = targetNetShare / 0.95;
-              else if (item.key === 'ovs') neededGross = targetNetShare / 0.90;
-
-              // 현재 계좌 잔액 한도 내에서 인출
-              let takeGross = Math.min(currentBal, neededGross);
-              let netDeducted = withdrawFromAccount(item.key, takeGross);
+              let neededGross = calculateGrossNeeded(item.key, targetNetShare, pensionLimitWon, annualPensionGrossCheck);
+              let netDeducted = withdrawFromAccount(item.key, neededGross);
               
-              remainingNeed -= netDeducted;
+              remainingNeed = Math.max(0, remainingNeed - netDeducted);
               extractedThisRound += netDeducted;
             }
 
-            // 이번 루프에서 인출된 금액이 없다면(더 이상 뺄 곳이 없음) 루프 탈출
             if (extractedThisRound <= 0) break;
           }
         }
