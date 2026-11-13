@@ -260,7 +260,7 @@
       z-index: 999;
       color: #f8fafc;
       line-height: 1.4;
-      min-width: 200px;
+      min-width: 180px;
     }
 
     .btn-group {
@@ -295,7 +295,7 @@
 
     #copySummaryBox {
       width: 100%;
-      height: 135px;
+      height: 110px;
       padding: 10px;
       border-radius: 8px;
       border: 1px solid var(--border-color);
@@ -350,7 +350,7 @@
     </div>
   </div>
 
-  <!-- 자산 입력 섹션 -->
+  <!-- 자산 입력 섹션 (요청하신 순서: 연금저축 → IRP → 중개형 ISA → 해외계좌 → 일반계좌 → 예금) -->
   <div class="section-card">
     <div class="section-title">💼 1. 보유 계좌별 자산 (원 단위)</div>
     <div class="input-grid">
@@ -452,7 +452,7 @@
     </div>
   </div>
 
-  <!-- 2번 스택 바 차트 -->
+  <!-- 2번 스택 바 차트 (색상 범례 순서 일치: 연금저축, IRP, ISA, 해외, 일반, 예금) -->
   <div class="section-card">
     <div class="chart-header">
       <div class="section-title" style="margin-bottom:0;">
@@ -637,7 +637,6 @@
     const accDeposit = parseCommaInt(document.getElementById('accDeposit').value);
 
     const totalAssetWon = accPension + accIrp + accIsa + accOverseas + accGeneral + accDeposit;
-    const safeAssetWon = accDeposit + accGeneral;
 
     const retireAge = parseInt(document.getElementById('retireAge').value, 10) || 56;
     const targetMonthlyDraw = parseCommaInt(document.getElementById('targetWithdrawal').value);
@@ -669,11 +668,10 @@
     let depletionAge = null;
     const dataPoints = [];
 
-    let crevasseTotalNeed = 0;
-
-    for (let i = 0; i <= (100 - retireAge); i++) {
+    for (let i = 0; i <= (95 - retireAge); i++) {
       const age = retireAge + i;
       const year = baseYear + age;
+      const totalSub = subPen + subIrp + subIsa + subOvs + subGen + subDep;
 
       const currentAnnualNeed = annualDrawInitial * Math.pow(1 + inflationRate, i);
 
@@ -683,28 +681,13 @@
       const annualTotalPension = annualNatPension + annualPrivAnnuity;
       const netWithdrawal = Math.max(0, currentAnnualNeed - annualTotalPension);
 
-      if (age >= retireAge && age < pensionStartAge) {
-        crevasseTotalNeed += netWithdrawal;
-      }
-
-      if (i > 0) {
-        // 1. 자산별 투자 수익 적용
-        subPen = Math.max(0, subPen * (1 + returnRate));
-        subIrp = Math.max(0, subIrp * (1 + returnRate));
-        subIsa = Math.max(0, subIsa * (1 + returnRate));
-        subOvs = Math.max(0, subOvs * (1 + returnRate));
-        subGen = Math.max(0, subGen * (1 + returnRate));
-        subDep = Math.max(0, subDep * (1 + returnRate));
-
-        // 2. 이전 버전의 현실적 절세 인출 순서: 예금 -> 일반 -> 해외 -> ISA -> 연금저축 -> IRP
-        let remainingNeed = netWithdrawal;
-        
-        let dDep = Math.min(subDep, remainingNeed); subDep -= dDep; remainingNeed -= dDep;
-        let dGen = Math.min(subGen, remainingNeed); subGen -= dGen; remainingNeed -= dGen;
-        let dOvs = Math.min(subOvs, remainingNeed); subOvs -= dOvs; remainingNeed -= dOvs;
-        let dIsa = Math.min(subIsa, remainingNeed); subIsa -= dIsa; remainingNeed -= dIsa;
-        let dPen = Math.min(subPen, remainingNeed); subPen -= dPen; remainingNeed -= dPen;
-        let dIrp = Math.min(subIrp, remainingNeed); subIrp -= dIrp; remainingNeed -= dIrp;
+      if (i > 0 && totalSub > 0) {
+        subPen = Math.max(0, (subPen - netWithdrawal * (subPen / totalSub)) * (1 + returnRate));
+        subIrp = Math.max(0, (subIrp - netWithdrawal * (subIrp / totalSub)) * (1 + returnRate));
+        subIsa = Math.max(0, (subIsa - netWithdrawal * (subIsa / totalSub)) * (1 + returnRate));
+        subOvs = Math.max(0, (subOvs - netWithdrawal * (subOvs / totalSub)) * (1 + returnRate));
+        subGen = Math.max(0, (subGen - netWithdrawal * (subGen / totalSub)) * (1 + returnRate));
+        subDep = Math.max(0, (subDep - netWithdrawal * (subDep / totalSub)) * (1 + returnRate));
       }
 
       const calculatedTotal = subPen + subIrp + subIsa + subOvs + subGen + subDep;
@@ -733,12 +716,12 @@
       kpiDep.style.color = 'var(--accent-green)';
     }
 
-    renderAdvancedChart(dataPoints, retireAge, pensionStartAge, inflationRate);
-    renderStackedBarChart(dataPoints, pensionStartAge, inflationRate);
-    updateSummaryText(totalAssetWon, accPension, accIrp, accIsa, accOverseas, accGeneral, accDeposit, targetMonthlyDraw, depletionAge, crevasseTotalNeed, safeAssetWon);
+    renderAdvancedChart(dataPoints, retireAge, pensionStartAge);
+    renderStackedBarChart(dataPoints, pensionStartAge);
+    updateSummaryText(totalAssetWon, accPension, accIrp, accIsa, accOverseas, accGeneral, accDeposit, targetMonthlyDraw, depletionAge);
   }
 
-  function renderAdvancedChart(dataPoints, retireAge, pensionStartAge, inflationRate) {
+  function renderAdvancedChart(dataPoints, retireAge, pensionStartAge) {
     const svg = document.getElementById('chartSvg');
     const container = document.getElementById('chartContainer');
     const tooltip = document.getElementById('chartTooltip');
@@ -855,25 +838,24 @@
 
       const d = dataPoints[closestIdx];
       const cx = getX(closestIdx), cy = getYBal(d.balance);
-      const realValue = d.balance / Math.pow(1 + inflationRate, closestIdx);
 
       activeMarker.setAttribute('cx', cx);
       activeMarker.setAttribute('cy', cy);
       activeMarker.style.opacity = '1';
 
       tooltip.style.opacity = '1';
-      let tooltipX = cx + 10, tooltipY = cy - 65;
-      if (tooltipX + 220 > width) tooltipX = cx - 230;
+      let tooltipX = cx + 10, tooltipY = cy - 60;
+      if (tooltipX + 200 > width) tooltipX = cx - 210;
       if (tooltipY < 10) tooltipY = cy + 10;
 
       tooltip.style.left = tooltipX + 'px';
       tooltip.style.top = tooltipY + 'px';
       tooltip.innerHTML = `
         <strong style="color:#60a5fa;">${d.age}세 (${d.year}년)</strong><br/>
-        명목 잔여 자산: <b style="color:#ffffff;">${formatAssetDisplay(d.balance)}</b><br/>
-        실질 가치(현재물가): <b style="color:#93c5fd;">${formatAssetDisplay(realValue)}</b><br/>
+        잔여 자산: <b style="color:#ffffff;">${formatAssetDisplay(d.balance)}</b><br/>
         총 생활비(월): ${formatComma(d.annualNeed)} 만 원<br/>
-        총 연금수령(월): <span style="color:#10b981;">${formatComma(d.pensionMonthly)} 만 원</span>
+        총 연금수령(월): <span style="color:#10b981;">${formatComma(d.pensionMonthly)} 만 원</span><br/>
+        <span style="font-size:0.75rem; color:#94a3b8;">(국민:${formatComma(d.natPensionMonthly)}만 | 보험:${formatComma(d.privAnnuityMonthly)}만)</span>
       `;
     };
 
@@ -884,7 +866,7 @@
     container.onmouseleave = () => { isLocked = false; activeMarker.style.opacity = '0'; tooltip.style.opacity = '0'; };
   }
 
-  function renderStackedBarChart(dataPoints, pensionStartAge, inflationRate) {
+  function renderStackedBarChart(dataPoints, pensionStartAge) {
     const svg = document.getElementById('barChartSvg');
     const container = document.getElementById('barChartContainer');
     const tooltip = document.getElementById('barChartTooltip');
@@ -984,8 +966,8 @@
       const bx = getX(closestIdx);
 
       tooltip.style.opacity = '1';
-      let tooltipX = bx + 10, tooltipY = getY(d.balance) - 50;
-      if (tooltipX + 220 > width) tooltipX = bx - 230;
+      let tooltipX = bx + 10, tooltipY = getY(d.balance) - 45;
+      if (tooltipX + 200 > width) tooltipX = bx - 210;
       if (tooltipY < 10) tooltipY = getY(d.balance) + 10;
 
       tooltip.style.left = tooltipX + 'px';
@@ -1006,13 +988,11 @@
     container.onmouseleave = () => { barLocked = false; tooltip.style.opacity = '0'; };
   }
 
-  function updateSummaryText(total, pen, irp, isa, ovs, gen, depAcc, draw, dep, crevasseNeed, safeAsset) {
-    const defenseRatio = crevasseNeed > 0 ? ((safeAsset / crevasseNeed) * 100).toFixed(0) : 0;
-    const text = `[은퇴 자산 인출 및 크레바스 방어 플랜 요약]\n` +
+  function updateSummaryText(total, pen, irp, isa, ovs, gen, depAcc, draw, dep) {
+    const text = `[은퇴 자산 인출 및 크레바스 방어 시뮬레이션 결과]\n` +
       `■ 총 자산: ${formatAssetDisplay(total)} (연금:${formatAssetDisplay(pen)}|IRP:${formatAssetDisplay(irp)}|ISA:${formatAssetDisplay(isa)}|해외:${formatAssetDisplay(ovs)}|일반:${formatAssetDisplay(gen)}|예금:${formatAssetDisplay(depAcc)})\n` +
-      `■ 인출 순서: 예금 → 일반계좌 → 해외계좌 → ISA → 연금저축 → IRP\n` +
-      `■ 월 인출 희망액: ${formatComma(draw)}만 원 | 크레바스 필요 누적액: ${formatAssetDisplay(crevasseNeed)} (안전자산 방어율: ${defenseRatio}%)\n` +
-      `■ 고갈 예상: ${dep !== null ? dep + '세 고갈 위험' : '100세 이상 안정적 유지 (안전)'}`;
+      `■ 월 인출 희망액: ${formatComma(draw)}만 원\n` +
+      `■ 고갈 예상: ${dep !== null ? dep + '세 고갈 위험' : '100세 이상 안정적 유지'}`;
     document.getElementById('copySummaryBox').value = text;
   }
 
