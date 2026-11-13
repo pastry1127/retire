@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>은퇴 자산 인출 시뮬레이터 (연금보험 물가 미반영 반영)</title>
+  <title>은퇴 자산 인출 시뮬레이터 (분리과세 탭 위치 이동 완료)</title>
   <style>
     :root {
       --bg-color: #0f172a;
@@ -404,7 +404,7 @@
 <div class="container">
   <!-- 헤더 & 모드 토글 -->
   <div class="header">
-    <h1>은퇴 자산 인출 시뮬레이터 (연금보험 물가 미반영 적용)</h1>
+    <h1>은퇴 자산 인출 시뮬레이터 (분리과세 탭 하단 배치 완료)</h1>
     <div class="theme-toggle" onclick="toggleTheme()">
       <span id="themeLabel">☀️ 라이트모드</span>
     </div>
@@ -473,14 +473,10 @@
     </div>
   </div>
 
-  <!-- 조건 설정 섹션 (연금보험 물가 미반영) -->
+  <!-- 조건 설정 섹션 (연금 분리과세 한도 탭을 맨 마지막으로 이동) -->
   <div class="section-card">
-    <div class="section-title">⚙️ 2. 연금 및 인출/수익률 설정 (연금보험 고정 금액)</div>
+    <div class="section-title">⚙️ 2. 연금 및 인출/수익률 설정</div>
     <div class="input-grid">
-      <div class="input-group">
-        <label for="pensionLimitWan">연금 분리과세 한도 (만 원)</label>
-        <input type="number" id="pensionLimitWan" value="1500" step="100" min="500" max="5000" onchange="recalculateAll()">
-      </div>
       <div class="input-group">
         <label for="pensionStartAge">국민연금 개시 연령 (물가 연동)</label>
         <select id="pensionStartAge" onchange="recalculateAll()">
@@ -517,9 +513,14 @@
         <label for="inflationRate">연 물가상승률(%)</label>
         <input type="number" id="inflationRate" value="2.5" step="0.1" onchange="recalculateAll()">
       </div>
-      <div class="input-group full-width">
+      <div class="input-group">
         <label for="returnRate">은퇴 후 연 투자 수익률 (%)</label>
         <input type="number" id="returnRate" value="8.0" step="0.1" onchange="recalculateAll()">
+      </div>
+      <!-- 연금 분리과세 한도 탭 맨 마지막 위치 -->
+      <div class="input-group">
+        <label for="pensionLimitWan">연금 분리과세 한도 (만 원)</label>
+        <input type="number" id="pensionLimitWan" value="1500" step="100" min="500" max="5000" onchange="recalculateAll()">
       </div>
     </div>
   </div>
@@ -886,9 +887,8 @@
 
       const currentAnnualNeed = annualDrawInitial * Math.pow(1 + inflationRate, i);
 
-      // 💡 [국민연금: 물가상승 반영 / 연금보험: 금액 고정]
       const annualNatPension = (age >= pensionStartAge) ? (pensionMonthly * 10000 * 12 * Math.pow(1 + inflationRate, Math.max(0, age - pensionStartAge))) : 0;
-      const annualPrivAnnuity = (age >= annuityStartAge) ? (annuityMonthly * 10000 * 12) : 0; // 물가 미반영 (고정)
+      const annualPrivAnnuity = (age >= annuityStartAge) ? (annuityMonthly * 10000 * 12) : 0;
 
       const annualTotalPension = annualNatPension + annualPrivAnnuity;
       const netWithdrawal = Math.max(0, currentAnnualNeed - annualTotalPension);
@@ -1288,7 +1288,7 @@
 
   function updateSummaryText(total, pen, irp, isa, ovs, gen, depAcc, draw, dep, limitWan) {
     const orderStr = withdrawalOrder.map(o => withdrawalMode === 'sequential' ? o.label : `${o.label}(${o.ratio}%)`).join(' → ');
-    const text = `[세후 자산 인출 및 연금보험 고정 반영 시뮬레이션 결과]\n` +
+    const text = `[세후 자산 인출 및 세제 한도 위치 조정 시뮬레이션 결과]\n` +
       `■ 총 자산: ${formatAssetDisplay(total)} (연금:${formatAssetDisplay(pen)}|IRP:${formatAssetDisplay(irp)}|ISA:${formatAssetDisplay(isa)}|해외:${formatAssetDisplay(ovs)}|일반:${formatAssetDisplay(gen)}|예금:${formatAssetDisplay(depAcc)})\n` +
       `■ 인출 방식(${withdrawalMode === 'sequential' ? '순차' : '비율'}): ${orderStr}\n` +
       `■ 월 인출 희망액(세후): ${formatComma(draw)}만 원\n` +
