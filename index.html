@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>은퇴 자산 인출 시뮬레이터 (연금 1500만 원 기준 변경 가능)</title>
+  <title>은퇴 자산 인출 시뮬레이터 (연금보험 물가 미반영 반영)</title>
   <style>
     :root {
       --bg-color: #0f172a;
@@ -404,7 +404,7 @@
 <div class="container">
   <!-- 헤더 & 모드 토글 -->
   <div class="header">
-    <h1>은퇴 자산 인출 시뮬레이터 (세제 한도 설정 기능 추가)</h1>
+    <h1>은퇴 자산 인출 시뮬레이터 (연금보험 물가 미반영 적용)</h1>
     <div class="theme-toggle" onclick="toggleTheme()">
       <span id="themeLabel">☀️ 라이트모드</span>
     </div>
@@ -473,16 +473,16 @@
     </div>
   </div>
 
-  <!-- 조건 설정 섹션 (세제 한도 탭 포함) -->
+  <!-- 조건 설정 섹션 (연금보험 물가 미반영) -->
   <div class="section-card">
-    <div class="section-title">⚙️ 2. 연금 및 인출/수익률 설정 (세제 한도 수정 가능)</div>
+    <div class="section-title">⚙️ 2. 연금 및 인출/수익률 설정 (연금보험 고정 금액)</div>
     <div class="input-grid">
       <div class="input-group">
         <label for="pensionLimitWan">연금 분리과세 한도 (만 원)</label>
         <input type="number" id="pensionLimitWan" value="1500" step="100" min="500" max="5000" onchange="recalculateAll()">
       </div>
       <div class="input-group">
-        <label for="pensionStartAge">국민연금 개시 연령</label>
+        <label for="pensionStartAge">국민연금 개시 연령 (물가 연동)</label>
         <select id="pensionStartAge" onchange="recalculateAll()">
           <option value="60">60세 (조기)</option>
           <option value="65" selected>65세 (정상)</option>
@@ -494,7 +494,7 @@
         <input type="text" id="pensionMonthly" value="110" oninput="formatAndRecalc(this)">
       </div>
       <div class="input-group">
-        <label for="annuityStartAge">연금보험 개시 연령</label>
+        <label for="annuityStartAge">연금보험 개시 연령 (금액 고정)</label>
         <input type="number" id="annuityStartAge" value="60" min="50" max="75" onchange="recalculateAll()">
       </div>
       <div class="input-group">
@@ -815,11 +815,10 @@
       net = grossNeeded - tax;
     } 
     else if (accountKey === 'pen' || accountKey === 'irp') {
-      // 사용자가 직접 설정한 분리과세 한도(limitWon) 기준 체크
       if (grossNeeded > limitWon) {
-        tax = grossNeeded * 0.165; // 초과 시 16.5% 과세 적용
+        tax = grossNeeded * 0.165;
       } else {
-        tax = grossNeeded * 0.055; // 한도 내 저율 5.5%
+        tax = grossNeeded * 0.055;
       }
       net = grossNeeded - tax;
     }
@@ -887,8 +886,9 @@
 
       const currentAnnualNeed = annualDrawInitial * Math.pow(1 + inflationRate, i);
 
+      // 💡 [국민연금: 물가상승 반영 / 연금보험: 금액 고정]
       const annualNatPension = (age >= pensionStartAge) ? (pensionMonthly * 10000 * 12 * Math.pow(1 + inflationRate, Math.max(0, age - pensionStartAge))) : 0;
-      const annualPrivAnnuity = (age >= annuityStartAge) ? (annuityMonthly * 10000 * 12) : 0;
+      const annualPrivAnnuity = (age >= annuityStartAge) ? (annuityMonthly * 10000 * 12) : 0; // 물가 미반영 (고정)
 
       const annualTotalPension = annualNatPension + annualPrivAnnuity;
       const netWithdrawal = Math.max(0, currentAnnualNeed - annualTotalPension);
@@ -1150,8 +1150,9 @@
       tooltip.innerHTML = `
         <strong style="color:#60a5fa;">${d.age}세 (${d.year}년)</strong><br/>
         잔여 자산: <b style="color:#ffffff;">${formatAssetDisplay(d.balance)}</b><br/>
-        사적연금 인출액(세전): <span style="color:${d.annualPensionGross > parseCommaInt(document.getElementById('pensionLimitWan').value)*10000 ? '#ef4444' : '#10b981'};">${Math.round(d.annualPensionGross/10000)}만 원</span><br/>
-        총 생활비(월): ${formatComma(d.annualNeed)} 만 원
+        총 생활비(월): ${formatComma(d.annualNeed)} 만 원<br/>
+        총 연금수령(월): <span style="color:#10b981;">${formatComma(d.pensionMonthly)} 만 원</span><br/>
+        <span style="font-size:0.75rem; color:#94a3b8;">(국민:${formatComma(d.natPensionMonthly)}만 | 연금보험(고정):${formatComma(d.privAnnuityMonthly)}만)</span>
       `;
     };
 
@@ -1287,7 +1288,7 @@
 
   function updateSummaryText(total, pen, irp, isa, ovs, gen, depAcc, draw, dep, limitWan) {
     const orderStr = withdrawalOrder.map(o => withdrawalMode === 'sequential' ? o.label : `${o.label}(${o.ratio}%)`).join(' → ');
-    const text = `[세후 자산 인출 및 세제 한도 설정 (${limitWan}만 원 기준) 시뮬레이션 결과]\n` +
+    const text = `[세후 자산 인출 및 연금보험 고정 반영 시뮬레이션 결과]\n` +
       `■ 총 자산: ${formatAssetDisplay(total)} (연금:${formatAssetDisplay(pen)}|IRP:${formatAssetDisplay(irp)}|ISA:${formatAssetDisplay(isa)}|해외:${formatAssetDisplay(ovs)}|일반:${formatAssetDisplay(gen)}|예금:${formatAssetDisplay(depAcc)})\n` +
       `■ 인출 방식(${withdrawalMode === 'sequential' ? '순차' : '비율'}): ${orderStr}\n` +
       `■ 월 인출 희망액(세후): ${formatComma(draw)}만 원\n` +
